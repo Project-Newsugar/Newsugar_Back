@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+
+# 앱 서버 정보
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: news-sugar-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db #앱이 사용할 DB 접속 정보 (환경변수)
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/news_db # DB 서버 주소 db:3306
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: qwer1234 #팀 비밀번호
+
+  # MySQL 데이터베이스 서버정보
+  db:
+    image: mysql:8.0
+    container_name: news-sugar-db
+    ports:
+      - "3306:3306" #3306포트를 외부와 연결
+    environment:
+      MYSQL_DATABASE: news_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: qwer1234 #팀 비밀번호
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
