@@ -1,8 +1,9 @@
 package newsugar.Newsugar_Back.domain.user.service;
 
+import jakarta.transaction.Transactional;
 import newsugar.Newsugar_Back.common.CustomException;
 import newsugar.Newsugar_Back.common.ErrorCode;
-import newsugar.Newsugar_Back.domain.user.dto.UserLoginResponseDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.repository.UserRepository;
 import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
@@ -50,4 +52,34 @@ public class UserService {
 
         return userRepository.save(user);
     }
+
+    public User modify(Long userId, String name, String rawPassword, String nickname, String phone) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        if (name != null && !name.isEmpty()) {
+            user.setName(name);
+        }
+
+        if (rawPassword != null && !rawPassword.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(rawPassword));
+        }
+
+        if (nickname != null && !nickname.isEmpty()) {
+            user.setNickname(nickname);
+        }
+
+        if (phone != null && !phone.isEmpty()) {
+            user.setPhone(phone);
+        }
+
+        return userRepository.save(user);
+    }
+
+    public User getInfo(Long userId){
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+    }
+
 }

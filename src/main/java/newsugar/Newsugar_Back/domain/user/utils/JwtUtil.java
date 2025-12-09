@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
+import newsugar.Newsugar_Back.common.CustomException;
+import newsugar.Newsugar_Back.common.ErrorCode;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

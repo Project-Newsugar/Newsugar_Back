@@ -11,18 +11,19 @@ import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "category")
+@Table(name = "user_score")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Category {
+public class Score {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Column(nullable = false)
+    private Integer score = 0;
 
     @Column(name = "created_at", updatable = false)
     @CreatedDate
@@ -31,4 +32,10 @@ public class Category {
     @Column(name = "updated_at")
     @LastModifiedDate
     private Instant updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+
 }
