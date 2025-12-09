@@ -107,36 +107,11 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public List<Quiz> listToday() {
-        Instant now = Instant.now();
-        return quizRepository.findAll().stream()
-                .filter(q -> (q.getStartAt() == null || !now.isBefore(q.getStartAt()))
-                        && (q.getEndAt() == null || !now.isAfter(q.getEndAt())))
-                .collect(Collectors.toList());
+    public SubmitResult score(Long id, List<Integer> answers) {
+        return score(id, null, answers);
     }
 
-    @Override
-    public List<Quiz> listByPeriod(Instant from, Instant to) {
-        List<Quiz> all = quizRepository.findAll();
-        return all.stream().filter(q -> {
-            Instant qs = q.getStartAt() != null ? q.getStartAt() : Instant.MIN;
-            Instant qe = q.getEndAt() != null ? q.getEndAt() : Instant.MAX;
-            return !(qe.isBefore(from) || qs.isAfter(to));
-        }).collect(Collectors.toList());
-    }
-
-    @Override
-    public SubmitResult lastResult(Long quizId) {
-        return quizSubmissionRepository.findTopByQuiz_IdOrderByCreatedAtDesc(quizId)
-                .map(sub -> {
-                    int total = sub.getTotal();
-                    int correct = sub.getCorrect();
-                    List<Boolean> results = sub.getAnswers() != null ?
-                            sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
-                    return new SubmitResult(total, correct, results, sub.getUserId());
-                })
-                .orElse(null);
-    }
+    
 
     @Override
     public void ensurePlayable(Long id) {
@@ -184,5 +159,37 @@ public class QuizServiceImpl implements QuizService {
         quiz.setSummary(summary);
         quiz.setQuestions(questions);
         return create(quiz);
+    }
+
+    @Override
+    public List<Quiz> listToday() {
+        Instant now = Instant.now();
+        return quizRepository.findAll().stream()
+                .filter(q -> (q.getStartAt() == null || !now.isBefore(q.getStartAt()))
+                        && (q.getEndAt() == null || !now.isAfter(q.getEndAt())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Quiz> listByPeriod(Instant from, Instant to) {
+        List<Quiz> all = quizRepository.findAll();
+        return all.stream().filter(q -> {
+            Instant qs = q.getStartAt() != null ? q.getStartAt() : Instant.MIN;
+            Instant qe = q.getEndAt() != null ? q.getEndAt() : Instant.MAX;
+            return !(qe.isBefore(from) || qs.isAfter(to));
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public SubmitResult lastResult(Long quizId) {
+        return quizSubmissionRepository.findTopByQuiz_IdOrderByCreatedAtDesc(quizId)
+                .map(sub -> {
+                    int total = sub.getTotal();
+                    int correct = sub.getCorrect();
+                    List<Boolean> results = sub.getAnswers() != null ?
+                            sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
+                    return new SubmitResult(total, correct, results, sub.getUserId());
+                })
+                .orElse(null);
     }
 }

@@ -9,6 +9,7 @@ public interface QuizService {
     Quiz create(Quiz quiz);
     Quiz get(Long id);
     SubmitResult score(Long id, Long userId, List<Integer> answers);
+    SubmitResult score(Long id, List<Integer> answers);
     List<Quiz> listToday();
     List<Quiz> listByPeriod(Instant from, Instant to);
     SubmitResult lastResult(Long quizId);
