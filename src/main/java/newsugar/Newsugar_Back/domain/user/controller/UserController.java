@@ -7,6 +7,7 @@ import newsugar.Newsugar_Back.domain.user.dto.Request.UserModifyRequestDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserInfoResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserSignupRequestDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Response.UserResponseDTO;
 import newsugar.Newsugar_Back.domain.user.model.Score;
 import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.service.JwtService;
@@ -28,8 +29,8 @@ public class UserController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResult<User>> signup (@RequestBody UserSignupRequestDTO request){
-        User user=userService.signup(
+    public ResponseEntity<ApiResult<UserResponseDTO>> signup(@RequestBody UserSignupRequestDTO request) {
+        User savedUser = userService.signup(
                 request.name(),
                 request.email(),
                 request.password(),
@@ -37,7 +38,15 @@ public class UserController {
                 request.phone()
         );
 
-        return ResponseEntity.ok(ApiResult.ok(user));
+        UserResponseDTO response = new UserResponseDTO(
+                savedUser.getId(),
+                savedUser.getName(),
+                savedUser.getEmail(),
+                savedUser.getNickname(),
+                savedUser.getPhone()
+        );
+
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @PostMapping("/login")
@@ -51,10 +60,10 @@ public class UserController {
     }
 
     @PatchMapping("/modify")
-    public ResponseEntity<ApiResult<User>> modify (
+    public ResponseEntity<ApiResult<UserResponseDTO>> modify(
             @RequestHeader("Authorization") String token,
             @RequestBody UserModifyRequestDTO request
-            ){
+    ) {
         String actualToken = token != null ? token.replace("Bearer ", "") : null;
 
         Long userId = jwtService.getUserIdFromToken(actualToken);
@@ -67,9 +76,15 @@ public class UserController {
                 request.phone()
         );
 
+        UserResponseDTO response = new UserResponseDTO(
+                updatedUser.getId(),
+                updatedUser.getName(),
+                updatedUser.getEmail(),
+                updatedUser.getNickname(),
+                updatedUser.getPhone()
+        );
 
-
-        return ResponseEntity.ok(ApiResult.ok(updatedUser));
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @GetMapping("/getInfo")
@@ -82,7 +97,14 @@ public class UserController {
         User user = userService.getInfo(userId);
         Integer score = scoreService.getScore(userId);
 
-        UserInfoResponseDTO response = new UserInfoResponseDTO(user,score);
+        UserInfoResponseDTO response = new UserInfoResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getPhone(),
+                score
+        );
 
         return  ResponseEntity.ok(ApiResult.ok(response));
     }
