@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.Objects;
@@ -29,11 +30,14 @@ public class JwtUtil {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + JWT_EXPIRATION);
 
+        byte[] keyBytes = JWT_SECRET.getBytes(StandardCharsets.UTF_8);
+        Key hmacKey = Keys.hmacShaKeyFor(keyBytes);
+
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(key, SignatureAlgorithm.ES256)
+                .signWith(hmacKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 

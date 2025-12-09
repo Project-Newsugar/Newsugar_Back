@@ -2,6 +2,8 @@ package newsugar.Newsugar_Back.domain.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import newsugar.Newsugar_Back.common.ApiResult;
+import newsugar.Newsugar_Back.domain.user.dto.UserLoginRequestDTO;
+import newsugar.Newsugar_Back.domain.user.dto.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.UserSignupRequestDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.service.UserService;
@@ -26,6 +28,16 @@ public class UserController {
                 request.password(),
                 request.nickname(),
                 request.phone()
+        );
+
+        return ResponseEntity.ok(ApiResult.ok(user));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResult<UserLoginResponseDTO>> login (@RequestBody UserLoginRequestDTO request){
+        UserLoginResponseDTO user = userService.login(
+                request.email(),
+                request.password()
         );
 
         return ResponseEntity.ok(ApiResult.ok(user));

@@ -1,8 +1,8 @@
 package newsugar.Newsugar_Back.domain.user.service;
 
-import lombok.AllArgsConstructor;
 import newsugar.Newsugar_Back.common.CustomException;
 import newsugar.Newsugar_Back.common.ErrorCode;
+import newsugar.Newsugar_Back.domain.user.dto.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.repository.UserRepository;
 import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
@@ -21,15 +21,16 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public final String login(String email, String rawPassword){
+    public UserLoginResponseDTO login(String email, String rawPassword) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "존재하지 않는 이메일입니다."));
 
-        if(!passwordEncoder.matches(rawPassword, user.getPassword())){
-            throw new CustomException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new CustomException(ErrorCode.AUTH_INVALID_CREDENTIALS, "아이디와 비밀번호가 일치하지 않습니다.");
         }
 
-        return jwtUtil.generateToken(user.getId());
+        String token = jwtUtil.generateToken(user.getId());
+        return new UserLoginResponseDTO(token, user.getId());
     }
 
     public User signup (String name, String email, String rawPassword, String nickname, String phone){
