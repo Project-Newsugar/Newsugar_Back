@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.Instant;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizServiceImpl implements QuizService {
@@ -65,5 +67,37 @@ public class QuizServiceImpl implements QuizService {
         quizSubmissionRepository.save(submission);
 
         return new SubmitResult(total, correct, results);
+    }
+
+    @Override
+    public List<Quiz> listToday() {
+        Instant now = Instant.now();
+        return quizRepository.findAll().stream()
+                .filter(q -> (q.getStartAt() == null || !now.isBefore(q.getStartAt()))
+                        && (q.getEndAt() == null || !now.isAfter(q.getEndAt())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Quiz> listByPeriod(Instant from, Instant to) {
+        List<Quiz> all = quizRepository.findAll();
+        return all.stream().filter(q -> {
+            Instant qs = q.getStartAt() != null ? q.getStartAt() : Instant.MIN;
+            Instant qe = q.getEndAt() != null ? q.getEndAt() : Instant.MAX;
+            return !(qe.isBefore(from) || qs.isAfter(to));
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public SubmitResult lastResult(Long quizId) {
+        return quizSubmissionRepository.findTopByQuiz_IdOrderByCreatedAtDesc(quizId)
+                .map(sub -> {
+                    int total = sub.getTotal();
+                    int correct = sub.getCorrect();
+                    List<Boolean> results = sub.getAnswers() != null ?
+                            sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
+                    return new SubmitResult(total, correct, results);
+                })
+                .orElse(null);
     }
 }

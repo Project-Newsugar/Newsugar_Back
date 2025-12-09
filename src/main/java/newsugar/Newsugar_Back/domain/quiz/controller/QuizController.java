@@ -49,11 +49,44 @@ public class QuizController {
         return ResponseEntity.ok(ApiResult.ok(res));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResult<java.util.List<QuizResponse>>> list(
+            @RequestParam(name = "scope", required = false) String scope,
+            @RequestParam(name = "from", required = false) java.time.Instant from,
+            @RequestParam(name = "to", required = false) java.time.Instant to
+    ) {
+        java.util.List<Quiz> quizzes;
+        if ("period".equalsIgnoreCase(scope) && from != null && to != null) {
+            quizzes = quizService.listByPeriod(from, to);
+        } else {
+            quizzes = quizService.listToday();
+        }
+        java.util.List<QuizResponse> res = new java.util.ArrayList<>();
+        for (Quiz q : quizzes) {
+            res.add(toResponse(q));
+        }
+        return ResponseEntity.ok(ApiResult.ok(res));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResult<QuizResponse>> get(@PathVariable Long id) {
         Quiz quiz = quizService.get(id);
         QuizResponse res = toResponse(quiz);
         return ResponseEntity.ok(ApiResult.ok(res));
+    }
+
+    @PostMapping("/{id}/start")
+    public ResponseEntity<ApiResult<String>> start(@PathVariable Long id) {
+        Quiz quiz = quizService.get(id);
+        if (quiz == null) {
+            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_NOT_FOUND.name(), "퀴즈를 찾을 수 없습니다"));
+        }
+        java.time.Instant now = java.time.Instant.now();
+        if ((quiz.getStartAt() != null && now.isBefore(quiz.getStartAt())) ||
+                (quiz.getEndAt() != null && now.isAfter(quiz.getEndAt()))) {
+            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_EXPIRED.name(), "퀴즈 시작 기간이 아닙니다"));
+        }
+        return ResponseEntity.ok(ApiResult.ok("OK"));
     }
 
     @PostMapping("/{id}/submit")
@@ -69,6 +102,19 @@ public class QuizController {
         }
         SubmitResult result = quizService.score(id, req != null ? req.answers() : null);
         return ResponseEntity.ok(ApiResult.ok(result));
+    }
+
+    @GetMapping("/{id}/result")
+    public ResponseEntity<ApiResult<SubmitResult>> result(@PathVariable Long id) {
+        Quiz quiz = quizService.get(id);
+        if (quiz == null) {
+            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_NOT_FOUND.name(), "퀴즈를 찾을 수 없습니다"));
+        }
+        SubmitResult last = quizService.lastResult(id);
+        if (last == null) {
+            return ResponseEntity.ok(ApiResult.error(ErrorCode.NOT_FOUND.name(), "결과가 없습니다"));
+        }
+        return ResponseEntity.ok(ApiResult.ok(last));
     }
 
     private QuizResponse toResponse(Quiz quiz) {
