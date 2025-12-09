@@ -3,6 +3,8 @@ package newsugar.Newsugar_Back.domain.user.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
@@ -38,9 +40,11 @@ public class User {
     @Column( name = "phone", nullable = true)
     private String phone;
 
-    @Column( name = "created_at")
+    @Column(name = "created_at", updatable = false)
+    @CreatedDate
     private Instant createdAt;
 
-    @Column( name = "updated_at")
+    @Column(name = "updated_at")
+    @LastModifiedDate
     private Instant updatedAt;
 }

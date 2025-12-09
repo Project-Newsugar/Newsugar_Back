@@ -1,11 +1,14 @@
 package newsugar.Newsugar_Back.domain.user.service;
 
+import jakarta.transaction.Transactional;
 import newsugar.Newsugar_Back.common.CustomException;
 import newsugar.Newsugar_Back.common.ErrorCode;
 import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
 import org.springframework.stereotype.Service;
 
+
 @Service
+@Transactional
 public class JwtService {
     private final JwtUtil jwtUtil;
 
