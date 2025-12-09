@@ -3,27 +3,21 @@ package newsugar.Newsugar_Back;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import newsugar.Newsugar_Back.domain.user.service.UserService;
-import newsugar.Newsugar_Back.domain.user.service.JwtService;
-import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
-import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
+import newsugar.Newsugar_Back.domain.quiz.repository.QuizRepository;
+import newsugar.Newsugar_Back.domain.quiz.repository.QuizSubmissionRepository;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
+})
 class NewsugarBackEndApplicationTests {
 
     @MockBean
-    private UserService userService;
+    private QuizRepository quizRepository;
 
     @MockBean
-    private JwtService jwtService;
+    private QuizSubmissionRepository quizSubmissionRepository;
 
-    @MockBean
-    private ScoreService scoreService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 }

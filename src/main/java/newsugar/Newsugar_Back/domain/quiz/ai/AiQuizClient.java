@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,8 @@ public class AiQuizClient {
     private final String baseUrl;
     private final String apiKey;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final HttpClient client = HttpClient.newHttpClient();
+    private final HttpClient client;
+    private final long timeoutMs;
 
     public static class QuestionData {
         public String text;
@@ -32,6 +34,15 @@ public class AiQuizClient {
         Dotenv env = Dotenv.load();
         this.baseUrl = env.get("QUIZ_AI_BASE_URL");
         this.apiKey = env.get("QUIZ_AI_API_KEY");
+        long tm = 0L;
+        try {
+            String v = env.get("QUIZ_AI_TIMEOUT_MS");
+            if (v != null && !v.isBlank()) tm = Long.parseLong(v.trim());
+        } catch (Exception ignored) {}
+        this.timeoutMs = tm > 0 ? tm : 0L;
+        HttpClient.Builder builder = HttpClient.newBuilder();
+        if (timeoutMs > 0) builder = builder.connectTimeout(Duration.ofMillis(timeoutMs));
+        this.client = builder.build();
     }
 
     public List<QuestionData> generate(String summaryText) {
@@ -42,12 +53,13 @@ public class AiQuizClient {
             String body = mapper.createObjectNode()
                     .put("summary", summaryText)
                     .toString();
-            HttpRequest req = HttpRequest.newBuilder()
+            HttpRequest.Builder rb = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + "/generate-quiz"))
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
-                    .build();
+                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
+            if (timeoutMs > 0) rb = rb.timeout(Duration.ofMillis(timeoutMs));
+            HttpRequest req = rb.build();
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (res.statusCode() >= 300) {
                 throw new CustomException(ErrorCode.INTERNAL_ERROR, "AI 호출 실패");
