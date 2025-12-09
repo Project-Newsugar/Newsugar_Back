@@ -1,5 +1,6 @@
 package newsugar.Newsugar_Back.common;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -33,6 +34,26 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.internalServerError()
                 .body(ApiResult.error(ErrorCode.INTERNAL_ERROR.name(), "서버 오류"));
+    }
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ApiResult<Void>> handleCustomException(CustomException ex) {
+        ex.printStackTrace(); // 콘솔에서 오류 확인 가능
+        HttpStatus status;
+
+        // ErrorCode에 따라 HTTP 상태 코드 지정
+        switch (ex.getErrorCode()) {
+            case CONFLICT -> status = HttpStatus.CONFLICT;
+            case BAD_REQUEST -> status = HttpStatus.BAD_REQUEST;
+            case UNAUTHORIZED -> status = HttpStatus.UNAUTHORIZED;
+            case FORBIDDEN -> status = HttpStatus.FORBIDDEN;
+            case NOT_FOUND , AUTH_ACCOUNT_NOT_FOUND -> status = HttpStatus.NOT_FOUND;
+            default -> status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+
+        return ResponseEntity
+                .status(status)
+                .body(ApiResult.error(ex.getErrorCode().name(), ex.getMessage()));
     }
 }
 

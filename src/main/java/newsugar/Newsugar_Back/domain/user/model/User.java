@@ -35,7 +35,7 @@ public class User {
     @Column( name = "nickname")
     private String nickname;
 
-    @Column( name = "phone")
+    @Column( name = "phone", nullable = true)
     private String phone;
 
     @Column( name = "created_at")
