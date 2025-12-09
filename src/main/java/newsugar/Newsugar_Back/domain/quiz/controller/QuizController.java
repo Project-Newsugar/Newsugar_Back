@@ -45,7 +45,7 @@ public class QuizController {
             }
         }
         Quiz saved = quizService.create(quiz);
-        QuizResponse res = toResponse(saved);
+        QuizResponse res = toResponse(saved, false);
         return ResponseEntity.ok(ApiResult.ok(res));
     }
 
@@ -61,9 +61,12 @@ public class QuizController {
         } else {
             quizzes = quizService.listToday();
         }
+        java.time.Instant now = java.time.Instant.now();
         java.util.List<QuizResponse> res = new java.util.ArrayList<>();
         for (Quiz q : quizzes) {
-            res.add(toResponse(q));
+            boolean playable = (q.getStartAt() == null || !now.isBefore(q.getStartAt()))
+                    && (q.getEndAt() == null || !now.isAfter(q.getEndAt()));
+            res.add(toResponse(q, !playable));
         }
         return ResponseEntity.ok(ApiResult.ok(res));
     }
@@ -71,7 +74,7 @@ public class QuizController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResult<QuizResponse>> get(@PathVariable Long id) {
         Quiz quiz = quizService.get(id);
-        QuizResponse res = toResponse(quiz);
+        QuizResponse res = toResponse(quiz, false);
         return ResponseEntity.ok(ApiResult.ok(res));
     }
 
@@ -117,12 +120,12 @@ public class QuizController {
         return ResponseEntity.ok(ApiResult.ok(last));
     }
 
-    private QuizResponse toResponse(Quiz quiz) {
+    private QuizResponse toResponse(Quiz quiz, boolean includeAnswers) {
         if (quiz == null) return null;
         java.util.List<QuizResponse.QuestionView> views = new java.util.ArrayList<>();
         if (quiz.getQuestions() != null) {
             for (Question q : quiz.getQuestions()) {
-                views.add(new QuizResponse.QuestionView(q.getText(), q.getOptions()));
+                views.add(new QuizResponse.QuestionView(q.getText(), q.getOptions(), includeAnswers ? q.getCorrectIndex() : null));
             }
         }
         return new QuizResponse(quiz.getId(), quiz.getTitle(), views, quiz.getStartAt(), quiz.getEndAt());
