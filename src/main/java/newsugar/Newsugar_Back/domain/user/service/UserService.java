@@ -76,4 +76,10 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User getInfo(Long userId){
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+    }
+
 }
