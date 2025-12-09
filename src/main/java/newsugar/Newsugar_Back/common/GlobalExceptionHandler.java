@@ -11,6 +11,8 @@ public class GlobalExceptionHandler {
     // 요청 유효성 검증 실패 처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResult<Void>> handleValidation(MethodArgumentNotValidException ex) {
+        ex.printStackTrace();
+
         return ResponseEntity.badRequest()
                 .body(ApiResult.error(ErrorCode.BAD_REQUEST.name(), "유효성 오류"));
     }
@@ -18,6 +20,8 @@ public class GlobalExceptionHandler {
     // 잘못된 인자 전달 처리
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResult<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        ex.printStackTrace();
+
         return ResponseEntity.badRequest()
                 .body(ApiResult.error(ErrorCode.BAD_REQUEST.name(), ex.getMessage()));
     }
@@ -25,6 +29,8 @@ public class GlobalExceptionHandler {
     // 기타 예상하지 못한 오류 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResult<Void>> handleException(Exception ex) {
+        ex.printStackTrace();
+
         return ResponseEntity.internalServerError()
                 .body(ApiResult.error(ErrorCode.INTERNAL_ERROR.name(), "서버 오류"));
     }
