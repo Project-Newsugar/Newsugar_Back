@@ -3,6 +3,7 @@ package newsugar.Newsugar_Back.domain.user.service;
 import jakarta.transaction.Transactional;
 import newsugar.Newsugar_Back.common.CustomException;
 import newsugar.Newsugar_Back.common.ErrorCode;
+import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.repository.UserRepository;
@@ -14,11 +15,13 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
+    private final ScoreService scoreService;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, ScoreService scoreService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.scoreService = scoreService;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
@@ -50,7 +53,12 @@ public class UserService {
                 .phone(phone)
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // 점수 초기화
+        scoreService.createScore(savedUser.getId());
+
+        return savedUser;
     }
 
     public User modify(Long userId, String name, String rawPassword, String nickname, String phone) {
