@@ -36,6 +36,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResult.error(ErrorCode.INTERNAL_ERROR.name(), "서버 오류"));
     }
 
+    // 필수 헤더 없을 경우 (Token 헤더)
+    @ExceptionHandler(org.springframework.web.bind.MissingRequestHeaderException.class)
+    public ResponseEntity<ApiResult<Void>> handleMissingHeader(org.springframework.web.bind.MissingRequestHeaderException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResult.error(ErrorCode.UNAUTHORIZED.name(), "Authorization 헤더가 존재하지 않습니다."));
+    }
+
+
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResult<Void>> handleCustomException(CustomException ex) {
         ex.printStackTrace(); // 콘솔에서 오류 확인 가능

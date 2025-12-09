@@ -2,23 +2,26 @@ package newsugar.Newsugar_Back.domain.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import newsugar.Newsugar_Back.common.ApiResult;
-import newsugar.Newsugar_Back.domain.user.dto.UserLoginRequestDTO;
-import newsugar.Newsugar_Back.domain.user.dto.UserLoginResponseDTO;
-import newsugar.Newsugar_Back.domain.user.dto.UserSignupRequestDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Request.UserLoginRequestDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Request.UserModifyRequestDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Request.UserSignupRequestDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
+import newsugar.Newsugar_Back.domain.user.service.JwtService;
 import newsugar.Newsugar_Back.domain.user.service.UserService;
+import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
 
-    private  final UserService userService;
+    private final UserService userService;
+    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
+
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResult<User>> signup (@RequestBody UserSignupRequestDTO request){
@@ -41,5 +44,27 @@ public class UserController {
         );
 
         return ResponseEntity.ok(ApiResult.ok(user));
+    }
+
+    @PatchMapping("/modify")
+    public ResponseEntity<ApiResult<User>> modify (
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserModifyRequestDTO request
+            ){
+        String actualToken = token != null ? token.replace("Bearer ", "") : null;
+
+        Long userId = jwtService.getUserIdFromToken(actualToken);
+
+        User updatedUser = userService.modify(
+                userId,
+                request.name(),
+                request.password(),
+                request.nickname(),
+                request.phone()
+        );
+
+
+
+        return ResponseEntity.ok(ApiResult.ok(updatedUser));
     }
 }
