@@ -8,6 +8,8 @@ group = 'newsugar'
 version = '0.0.1-SNAPSHOT'
 description = 'AI-Powered News Summarization Service Backend'
 
+buildDir = file(System.getProperty("java.io.tmpdir") + "/newsugar-backend-build")
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
@@ -30,6 +32,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
