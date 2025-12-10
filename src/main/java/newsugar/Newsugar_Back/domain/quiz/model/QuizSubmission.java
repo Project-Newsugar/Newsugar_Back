@@ -1,6 +1,8 @@
 package newsugar.Newsugar_Back.domain.quiz.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.Builder.Default;
 
 @Entity
+@Table(name = "quiz_submission")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -36,13 +39,16 @@ public class QuizSubmission {
     @Default
     private List<SubmissionAnswer> answers = new ArrayList<>();
 
+    @Column(name = "total")
     private int total;
+    @Column(name = "correct")
     private int correct;
 
     @CreatedDate
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @LastModifiedDate
+    @Column(name = "updated_at")
     private Instant updatedAt;
-
 }

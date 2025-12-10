@@ -1,6 +1,8 @@
 package newsugar.Newsugar_Back.domain.quiz.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.Builder.Default;
 
 @Entity
+@Table(name = "quiz")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -28,18 +31,34 @@ public class Quiz {
     private Long id;
     private String title;
 
+    @Column(name = "question")
+    private String question;
+    @Column(name = "correct_answer")
+    private String correctAnswer;
+
+    @Column(name = "start_at")
     private Instant startAt;
+    @Column(name = "end_at")
     private Instant endAt;
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+    @Column(name = "is_revealed")
+    private Boolean isRevealed;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "quiz_id")
     @Default
     private List<Question> questions = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "summary_id")
+    private newsugar.Newsugar_Back.domain.summary.model.Summary summary;
+
     @CreatedDate
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @LastModifiedDate
+    @Column(name = "updated_at")
     private Instant updatedAt;
-
 }

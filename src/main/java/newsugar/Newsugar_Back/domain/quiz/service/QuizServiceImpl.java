@@ -57,6 +57,7 @@ public class QuizServiceImpl implements QuizService {
             sa.setQuestionIndex(i);
             sa.setChosenIndex(answer);
             sa.setCorrect(ok);
+            sa.setAnsweredAt(Instant.now());
             storedAnswers.add(sa);
         }
         QuizSubmission submission = new QuizSubmission();
