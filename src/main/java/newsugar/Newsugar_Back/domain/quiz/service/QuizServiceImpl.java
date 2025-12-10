@@ -104,6 +104,7 @@ public class QuizServiceImpl implements QuizService {
         quizSubmissionRepository.save(submission);
 
         return new SubmitResult(total, correct, results, userId);
+<<<<<<< HEAD
     }
 
     @Override
@@ -159,6 +160,8 @@ public class QuizServiceImpl implements QuizService {
         quiz.setSummary(summary);
         quiz.setQuestions(questions);
         return create(quiz);
+=======
+>>>>>>> 0b6ed08 (feat(quiz): 요약 기반 AI 퀴즈 생성 서비스엔드포인트 추가\n- Summary 연동 및 AI 호출로 질문 생성\n- QuizService에 generateFromSummary 추가 및 구현\n- 컨트롤러에 /quizzes/summary/{summaryId}/generate 추가\n- 기존 구조 유지, 예외는 팀 공통 코드 사용)
     }
 
     @Override
@@ -191,5 +194,53 @@ public class QuizServiceImpl implements QuizService {
                     return new SubmitResult(total, correct, results, sub.getUserId());
                 })
                 .orElse(null);
+    }
+
+    @Override
+    public void ensurePlayable(Long id) {
+        Quiz quiz = get(id);
+        if (quiz == null) {
+            throw new CustomException(ErrorCode.QUIZ_NOT_FOUND, "퀴즈를 찾을 수 없습니다");
+        }
+        Instant now = Instant.now();
+        if ((quiz.getStartAt() != null && now.isBefore(quiz.getStartAt())) ||
+            (quiz.getEndAt() != null && now.isAfter(quiz.getEndAt()))) {
+            throw new CustomException(ErrorCode.QUIZ_EXPIRED, "퀴즈 시작 기간이 아닙니다");
+        }
+    }
+
+    @Override
+    public SubmitResult resultOrThrow(Long quizId) {
+        return quizSubmissionRepository.findTopByQuiz_IdOrderByCreatedAtDesc(quizId)
+                .map(sub -> {
+                    int total = sub.getTotal();
+                    int correct = sub.getCorrect();
+                    List<Boolean> results = sub.getAnswers() != null ?
+                            sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
+                    return new SubmitResult(total, correct, results, sub.getUserId());
+                })
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "결과가 없습니다"));
+    }
+
+    @Override
+    public Quiz generateFromSummary(Long summaryId) {
+        Summary summary = summaryRepository.findById(summaryId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "요약을 찾을 수 없습니다"));
+
+        List<AiQuizClient.QuestionData> gen = aiQuizClient.generate(summary.getSummaryText());
+        List<Question> questions = new ArrayList<>();
+        if (gen != null) {
+            for (AiQuizClient.QuestionData d : gen) {
+                Question q = new Question();
+                q.setText(d.text);
+                q.setOptions(d.options != null ? d.options : List.of());
+                q.setCorrectIndex(d.correctIndex);
+                questions.add(q);
+            }
+        }
+        Quiz quiz = new Quiz();
+        quiz.setSummary(summary);
+        quiz.setQuestions(questions);
+        return create(quiz);
     }
 }

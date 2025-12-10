@@ -30,11 +30,6 @@ public class QuizController {
         quiz.setTitle(req.title());
         quiz.setStartAt(req.startAt());
         quiz.setEndAt(req.endAt());
-        if (quiz.getStartAt() != null && quiz.getEndAt() != null) {
-            if (quiz.getEndAt().isBefore(quiz.getStartAt())) {
-                throw new IllegalArgumentException("종료 시간이 시작 시간보다 빠릅니다");
-            }
-        }
         if (req.questions() != null) {
             for (CreateQuizRequest.QuestionCreate qc : req.questions()) {
                 Question q = new Question();
@@ -78,45 +73,32 @@ public class QuizController {
         return ResponseEntity.ok(ApiResult.ok(res));
     }
 
+    @PostMapping("/summary/{summaryId}/generate")
+    public ResponseEntity<ApiResult<QuizResponse>> generateFromSummary(@PathVariable Long summaryId) {
+        Quiz quiz = quizService.generateFromSummary(summaryId);
+        QuizResponse res = toResponse(quiz, false);
+        return ResponseEntity.ok(ApiResult.ok(res));
+    }
+
     @PostMapping("/{id}/start")
     public ResponseEntity<ApiResult<String>> start(@PathVariable Long id) {
-        Quiz quiz = quizService.get(id);
-        if (quiz == null) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_NOT_FOUND.name(), "퀴즈를 찾을 수 없습니다"));
-        }
-        java.time.Instant now = java.time.Instant.now();
-        if ((quiz.getStartAt() != null && now.isBefore(quiz.getStartAt())) ||
-                (quiz.getEndAt() != null && now.isAfter(quiz.getEndAt()))) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_EXPIRED.name(), "퀴즈 시작 기간이 아닙니다"));
-        }
+        quizService.ensurePlayable(id);
         return ResponseEntity.ok(ApiResult.ok("OK"));
     }
 
     @PostMapping("/{id}/submit")
     public ResponseEntity<ApiResult<SubmitResult>> submit(@PathVariable Long id, @RequestBody SubmitRequest req) {
-        Quiz quiz = quizService.get(id);
-        if (quiz == null) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_NOT_FOUND.name(), "퀴즈를 찾을 수 없습니다"));
-        }
-        java.time.Instant now = java.time.Instant.now();
-        if ((quiz.getStartAt() != null && now.isBefore(quiz.getStartAt())) ||
-            (quiz.getEndAt() != null && now.isAfter(quiz.getEndAt()))) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_EXPIRED.name(), "퀴즈 제출 기간이 아닙니다"));
-        }
-        SubmitResult result = quizService.score(id, req != null ? req.answers() : null);
+        SubmitResult result = quizService.score(
+                id,
+                req != null ? req.userId() : null,
+                req != null ? req.answers() : null
+        );
         return ResponseEntity.ok(ApiResult.ok(result));
     }
 
     @GetMapping("/{id}/result")
     public ResponseEntity<ApiResult<SubmitResult>> result(@PathVariable Long id) {
-        Quiz quiz = quizService.get(id);
-        if (quiz == null) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_NOT_FOUND.name(), "퀴즈를 찾을 수 없습니다"));
-        }
-        SubmitResult last = quizService.lastResult(id);
-        if (last == null) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.NOT_FOUND.name(), "결과가 없습니다"));
-        }
+        SubmitResult last = quizService.resultOrThrow(id);
         return ResponseEntity.ok(ApiResult.ok(last));
     }
 
