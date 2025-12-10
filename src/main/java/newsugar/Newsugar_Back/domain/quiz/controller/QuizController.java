@@ -9,6 +9,7 @@ import newsugar.Newsugar_Back.domain.quiz.model.Question;
 import newsugar.Newsugar_Back.domain.quiz.dto.CreateQuizRequest;
 import newsugar.Newsugar_Back.domain.quiz.dto.QuizResponse;
 import newsugar.Newsugar_Back.domain.quiz.service.QuizService;
+import newsugar.Newsugar_Back.domain.user.service.JwtService;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
@@ -19,30 +20,14 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class QuizController {
     private final QuizService quizService;
+    private final JwtService jwtService;
 
-    public QuizController(QuizService quizService) {
+    public QuizController(QuizService quizService, JwtService jwtService) {
         this.quizService = quizService;
+        this.jwtService = jwtService;
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResult<QuizResponse>> create(@Valid @RequestBody CreateQuizRequest req) {
-        Quiz quiz = new Quiz();
-        quiz.setTitle(req.title());
-        quiz.setStartAt(req.startAt());
-        quiz.setEndAt(req.endAt());
-        if (req.questions() != null) {
-            for (CreateQuizRequest.QuestionCreate qc : req.questions()) {
-                Question q = new Question();
-                q.setText(qc.text());
-                q.setOptions(qc.options());
-                q.setCorrectIndex(qc.correctIndex());
-                quiz.getQuestions().add(q);
-            }
-        }
-        Quiz saved = quizService.create(quiz);
-        QuizResponse res = toResponse(saved, false);
-        return ResponseEntity.ok(ApiResult.ok(res));
-    }
+    
 
     @GetMapping
     public ResponseEntity<ApiResult<java.util.List<QuizResponse>>> list(
@@ -74,23 +59,29 @@ public class QuizController {
     }
 
     @PostMapping("/summary/{summaryId}/generate")
-    public ResponseEntity<ApiResult<QuizResponse>> generateFromSummary(@PathVariable Long summaryId) {
+    public ResponseEntity<ApiResult<QuizResponse>> generateFromSummary(
+            @PathVariable Long summaryId,
+            @RequestHeader("Authorization") String token
+    ) {
+        String actualToken = token != null ? token.replace("Bearer ", "") : null;
+        jwtService.getUserIdFromToken(actualToken);
         Quiz quiz = quizService.generateFromSummary(summaryId);
         QuizResponse res = toResponse(quiz, false);
         return ResponseEntity.ok(ApiResult.ok(res));
     }
 
-    @PostMapping("/{id}/start")
-    public ResponseEntity<ApiResult<String>> start(@PathVariable Long id) {
-        quizService.ensurePlayable(id);
-        return ResponseEntity.ok(ApiResult.ok("OK"));
-    }
 
     @PostMapping("/{id}/submit")
-    public ResponseEntity<ApiResult<SubmitResult>> submit(@PathVariable Long id, @RequestBody SubmitRequest req) {
+    public ResponseEntity<ApiResult<SubmitResult>> submit(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token,
+            @RequestBody SubmitRequest req
+    ) {
+        String actualToken = token != null ? token.replace("Bearer ", "") : null;
+        Long userId = jwtService.getUserIdFromToken(actualToken);
         SubmitResult result = quizService.score(
                 id,
-                req != null ? req.userId() : null,
+                userId,
                 req != null ? req.answers() : null
         );
         return ResponseEntity.ok(ApiResult.ok(result));
