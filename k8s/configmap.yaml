@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: newsugar-config
+data:
+  DB_URL: jdbc:mysql://newsugar-mysql:3306/news_db
