@@ -3,9 +3,14 @@ package newsugar.Newsugar_Back.domain.user.service;
 import jakarta.transaction.Transactional;
 import newsugar.Newsugar_Back.common.CustomException;
 import newsugar.Newsugar_Back.common.ErrorCode;
+import newsugar.Newsugar_Back.domain.category.Model.Category;
+import newsugar.Newsugar_Back.domain.category.Repository.CategoryRepository;
 import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
+import newsugar.Newsugar_Back.domain.user.dto.Response.UserCategoryResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
+import newsugar.Newsugar_Back.domain.user.model.UserCategory;
+import newsugar.Newsugar_Back.domain.user.repository.UserCategoryRepository;
 import newsugar.Newsugar_Back.domain.user.repository.UserRepository;
 import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,12 +21,16 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
     private final ScoreService scoreService;
+    private final CategoryRepository categoryRepository;
+    private final UserCategoryRepository userCategoryRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, ScoreService scoreService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, ScoreService scoreService, CategoryRepository categoryRepository, UserCategoryRepository userCategoryRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.scoreService = scoreService;
+        this.categoryRepository = categoryRepository;
+        this.userCategoryRepository = userCategoryRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
@@ -88,6 +97,49 @@ public class UserService {
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+    }
+
+    public UserCategoryResponseDTO preferCategory(Long userId, Long categoryId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "존재하지 않는 카테고리입니다."));
+
+        if (userCategoryRepository.existsByUserIdAndCategoryId(userId, categoryId)) {
+            throw new CustomException(ErrorCode.CONFLICT, "이미 선호 카테고리가 등록되어 있습니다.");
+        }
+
+        UserCategory userCategory = UserCategory.builder()
+                .user(user)
+                .category(category)
+                .build();
+
+        UserCategory savedUC = userCategoryRepository.save(userCategory);
+
+        return new UserCategoryResponseDTO(
+                savedUC.getId(),
+                savedUC.getUser().getId(),
+                savedUC.getCategory().getId(),
+                savedUC.getCategory().getName()
+        );
+
+    }
+
+    public void deleteCategory(Long userId, Long categoryId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "존재하지 않는 카테고리입니다."));
+
+        UserCategory userCategory = userCategoryRepository
+                .findByUserIdAndCategoryId(userId, categoryId)
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.NOT_FOUND, "이미 즐겨찾기 해제된 카테고리입니다.")
+                );
+
+        userCategoryRepository.delete(userCategory);
     }
 
 }
