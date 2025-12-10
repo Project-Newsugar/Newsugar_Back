@@ -2,8 +2,10 @@ package newsugar.Newsugar_Back.domain.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import newsugar.Newsugar_Back.common.ApiResult;
+import newsugar.Newsugar_Back.domain.user.dto.Request.UserCategoryRequestDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserLoginRequestDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserModifyRequestDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Response.UserCategoryResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserInfoResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserSignupRequestDTO;
@@ -105,6 +107,19 @@ public class UserController {
                 score
         );
 
-        return  ResponseEntity.ok(ApiResult.ok(response));
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @PostMapping("/category")
+    public ResponseEntity<ApiResult<UserCategoryResponseDTO>> preferCategory (
+        @RequestHeader("Authorization") String token,
+        @RequestBody UserCategoryRequestDTO request
+    ){
+        String actualToken = token != null ? token.replace("Bearer ", "") : null;
+        Long userId = jwtService.getUserIdFromToken(actualToken);
+
+        UserCategoryResponseDTO response = userService.preferCategory(userId, request.categoryId());
+
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 }
