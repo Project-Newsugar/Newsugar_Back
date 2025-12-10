@@ -1,5 +1,5 @@
 
-import newsugar.domain.news.repository.NewsRepository;
+package newsugar.domain.news.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -28,10 +28,13 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
-    // MySQL Driver
+    //  MySQL Driver
     runtimeOnly 'com.mysql:mysql-connector-j:8.2.0'
 
-    // ROME for RSS parsing
+    //  H2 삭제하거나 주석
+    //runtimeOnly 'com.h2database:h2'
+
+    // RSS 라이브러리
     implementation 'com.rometools:rome:1.12.2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

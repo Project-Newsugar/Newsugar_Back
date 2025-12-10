@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import newsugar.domain.news.dto.NewsResponse;
 import newsugar.domain.news.model.NewsCategory;
-import newsugar.domain.news.model.NewsService;
+import newsugar.domain.news.service.NewsService;
 
 import java.util.List;
 

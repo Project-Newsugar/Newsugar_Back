@@ -1,12 +1,7 @@
 package newsugar.domain.news.entity;
 
-<<<<<<< HEAD
 import jakarta.persistence.*;
 import lombok.*;
-=======
-import jakarta.persistence.;
-import lombok.;
->>>>>>> 153ad2c1636646ab304f63fe9f8b08017de6fee9
 import newsugar.domain.news.model.NewsCategory;
 import newsugar.domain.news.dto.NewsDto;
 
@@ -49,8 +44,4 @@ public class News {
                 .category(dto.category())
                 .build();
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 153ad2c1636646ab304f63fe9f8b08017de6fee9
