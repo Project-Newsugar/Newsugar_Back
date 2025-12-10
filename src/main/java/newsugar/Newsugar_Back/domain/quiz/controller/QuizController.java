@@ -30,11 +30,6 @@ public class QuizController {
         quiz.setTitle(req.title());
         quiz.setStartAt(req.startAt());
         quiz.setEndAt(req.endAt());
-        if (quiz.getStartAt() != null && quiz.getEndAt() != null) {
-            if (quiz.getEndAt().isBefore(quiz.getStartAt())) {
-                throw new IllegalArgumentException("종료 시간이 시작 시간보다 빠릅니다");
-            }
-        }
         if (req.questions() != null) {
             for (CreateQuizRequest.QuestionCreate qc : req.questions()) {
                 Question q = new Question();
@@ -45,38 +40,74 @@ public class QuizController {
             }
         }
         Quiz saved = quizService.create(quiz);
-        QuizResponse res = toResponse(saved);
+        QuizResponse res = toResponse(saved, false);
+        return ResponseEntity.ok(ApiResult.ok(res));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResult<java.util.List<QuizResponse>>> list(
+            @RequestParam(name = "scope", required = false) String scope,
+            @RequestParam(name = "from", required = false) java.time.Instant from,
+            @RequestParam(name = "to", required = false) java.time.Instant to
+    ) {
+        java.util.List<Quiz> quizzes;
+        if ("period".equalsIgnoreCase(scope) && from != null && to != null) {
+            quizzes = quizService.listByPeriod(from, to);
+        } else {
+            quizzes = quizService.listToday();
+        }
+        java.time.Instant now = java.time.Instant.now();
+        java.util.List<QuizResponse> res = new java.util.ArrayList<>();
+        for (Quiz q : quizzes) {
+            boolean playable = (q.getStartAt() == null || !now.isBefore(q.getStartAt()))
+                    && (q.getEndAt() == null || !now.isAfter(q.getEndAt()));
+            res.add(toResponse(q, !playable));
+        }
         return ResponseEntity.ok(ApiResult.ok(res));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResult<QuizResponse>> get(@PathVariable Long id) {
         Quiz quiz = quizService.get(id);
-        QuizResponse res = toResponse(quiz);
+        QuizResponse res = toResponse(quiz, false);
         return ResponseEntity.ok(ApiResult.ok(res));
+    }
+
+    @PostMapping("/summary/{summaryId}/generate")
+    public ResponseEntity<ApiResult<QuizResponse>> generateFromSummary(@PathVariable Long summaryId) {
+        Quiz quiz = quizService.generateFromSummary(summaryId);
+        QuizResponse res = toResponse(quiz, false);
+        return ResponseEntity.ok(ApiResult.ok(res));
+    }
+
+    @PostMapping("/{id}/start")
+    public ResponseEntity<ApiResult<String>> start(@PathVariable Long id) {
+        quizService.ensurePlayable(id);
+        return ResponseEntity.ok(ApiResult.ok("OK"));
     }
 
     @PostMapping("/{id}/submit")
     public ResponseEntity<ApiResult<SubmitResult>> submit(@PathVariable Long id, @RequestBody SubmitRequest req) {
-        Quiz quiz = quizService.get(id);
-        if (quiz == null) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_NOT_FOUND.name(), "퀴즈를 찾을 수 없습니다"));
-        }
-        java.time.Instant now = java.time.Instant.now();
-        if ((quiz.getStartAt() != null && now.isBefore(quiz.getStartAt())) ||
-            (quiz.getEndAt() != null && now.isAfter(quiz.getEndAt()))) {
-            return ResponseEntity.ok(ApiResult.error(ErrorCode.QUIZ_EXPIRED.name(), "퀴즈 제출 기간이 아닙니다"));
-        }
-        SubmitResult result = quizService.score(id, req != null ? req.answers() : null);
+        SubmitResult result = quizService.score(
+                id,
+                req != null ? req.userId() : null,
+                req != null ? req.answers() : null
+        );
         return ResponseEntity.ok(ApiResult.ok(result));
     }
 
-    private QuizResponse toResponse(Quiz quiz) {
+    @GetMapping("/{id}/result")
+    public ResponseEntity<ApiResult<SubmitResult>> result(@PathVariable Long id) {
+        SubmitResult last = quizService.resultOrThrow(id);
+        return ResponseEntity.ok(ApiResult.ok(last));
+    }
+
+    private QuizResponse toResponse(Quiz quiz, boolean includeAnswers) {
         if (quiz == null) return null;
         java.util.List<QuizResponse.QuestionView> views = new java.util.ArrayList<>();
         if (quiz.getQuestions() != null) {
             for (Question q : quiz.getQuestions()) {
-                views.add(new QuizResponse.QuestionView(q.getText(), q.getOptions()));
+                views.add(new QuizResponse.QuestionView(q.getText(), q.getOptions(), includeAnswers ? q.getCorrectIndex() : null));
             }
         }
         return new QuizResponse(quiz.getId(), quiz.getTitle(), views, quiz.getStartAt(), quiz.getEndAt());
