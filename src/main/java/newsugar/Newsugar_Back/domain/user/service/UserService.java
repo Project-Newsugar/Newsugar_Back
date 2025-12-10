@@ -126,4 +126,20 @@ public class UserService {
 
     }
 
+    public void deleteCategory(Long userId, Long categoryId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "존재하지 않는 카테고리입니다."));
+
+        UserCategory userCategory = userCategoryRepository
+                .findByUserIdAndCategoryId(userId, categoryId)
+                .orElseThrow(() ->
+                        new CustomException(ErrorCode.NOT_FOUND, "이미 즐겨찾기 해제된 카테고리입니다.")
+                );
+
+        userCategoryRepository.delete(userCategory);
+    }
+
 }

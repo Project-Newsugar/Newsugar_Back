@@ -122,4 +122,19 @@ public class UserController {
 
         return ResponseEntity.ok(ApiResult.ok(response));
     }
+
+    @DeleteMapping("/category/{categoryId}")
+    public ResponseEntity<ApiResult<String>> notPreferCategory(
+            @PathVariable Long categoryId,
+            @RequestHeader("Authorization") String token
+    ) {
+        String actualToken = token != null ? token.replace("Bearer ", "") : null;
+        Long userId = jwtService.getUserIdFromToken(actualToken);
+
+        userService.deleteCategory(userId, categoryId);
+
+
+
+        return ResponseEntity.ok(ApiResult.ok("즐겨찾기가 해제되었습니다." ));
+    }
 }
