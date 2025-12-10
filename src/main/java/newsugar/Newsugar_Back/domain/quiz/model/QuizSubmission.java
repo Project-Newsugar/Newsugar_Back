@@ -18,7 +18,7 @@ import lombok.AccessLevel;
 import lombok.Builder.Default;
 
 @Entity
-@Table(name = "quiz_submission")
+@Table(name = "user_quiz")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -28,6 +28,7 @@ import lombok.Builder.Default;
 public class QuizSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "score_id")
     private Long id;
 
     @ManyToOne
@@ -41,7 +42,7 @@ public class QuizSubmission {
 
     @Column(name = "total")
     private int total;
-    @Column(name = "correct")
+    @Column(name = "quiz_score")
     private int correct;
 
     @CreatedDate
@@ -51,4 +52,7 @@ public class QuizSubmission {
     @LastModifiedDate
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "user_id")
+    private Long userId;
 }

@@ -14,7 +14,7 @@ import lombok.Builder;
 import lombok.AccessLevel;
 
 @Entity
-@Table(name = "submission_answer")
+@Table(name = "quiz_answers")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,10 +27,16 @@ public class SubmissionAnswer {
 
     @Column(name = "questionIndex")
     private Integer questionIndex;
-    @Column(name = "chosenIndex")
+    @Column(name = "user_answer")
     private Integer chosenIndex;
     @Column(name = "is_correct")
     private Boolean correct;
     @Column(name = "answered_at")
     private java.time.Instant answeredAt;
+
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(name = "quiz_id")
+    private Long quizId;
 }
