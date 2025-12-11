@@ -33,7 +33,6 @@ public class SubmissionAnswer {
     private Boolean correct;
     @Column(name = "answered_at")
     private java.time.Instant answeredAt;
-
     @Column(name = "user_id")
     private Long userId;
 

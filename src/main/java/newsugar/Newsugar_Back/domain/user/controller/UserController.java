@@ -2,10 +2,8 @@ package newsugar.Newsugar_Back.domain.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import newsugar.Newsugar_Back.common.ApiResult;
-import newsugar.Newsugar_Back.domain.user.dto.Request.UserCategoryRequestDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserLoginRequestDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserModifyRequestDTO;
-import newsugar.Newsugar_Back.domain.user.dto.Response.UserCategoryResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserInfoResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserSignupRequestDTO;
@@ -14,7 +12,6 @@ import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.service.JwtService;
 import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
 import newsugar.Newsugar_Back.domain.user.service.UserService;
-import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +23,6 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private final ScoreService scoreService;
-    private final JwtUtil jwtUtil;
 
 
     @PostMapping("/signup")
@@ -107,34 +103,6 @@ public class UserController {
                 score
         );
 
-        return ResponseEntity.ok(ApiResult.ok(response));
-    }
-
-    @PostMapping("/category")
-    public ResponseEntity<ApiResult<UserCategoryResponseDTO>> preferCategory (
-        @RequestHeader("Authorization") String token,
-        @RequestBody UserCategoryRequestDTO request
-    ){
-        String actualToken = token != null ? token.replace("Bearer ", "") : null;
-        Long userId = jwtService.getUserIdFromToken(actualToken);
-
-        UserCategoryResponseDTO response = userService.preferCategory(userId, request.categoryId());
-
-        return ResponseEntity.ok(ApiResult.ok(response));
-    }
-
-    @DeleteMapping("/category/{categoryId}")
-    public ResponseEntity<ApiResult<String>> notPreferCategory(
-            @PathVariable Long categoryId,
-            @RequestHeader("Authorization") String token
-    ) {
-        String actualToken = token != null ? token.replace("Bearer ", "") : null;
-        Long userId = jwtService.getUserIdFromToken(actualToken);
-
-        userService.deleteCategory(userId, categoryId);
-
-
-
-        return ResponseEntity.ok(ApiResult.ok("즐겨찾기가 해제되었습니다." ));
+        return  ResponseEntity.ok(ApiResult.ok(response));
     }
 }

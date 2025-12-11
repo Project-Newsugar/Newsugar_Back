@@ -107,6 +107,11 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    public SubmitResult score(Long id, List<Integer> answers) {
+        return score(id, null, answers);
+    }
+
+    @Override
     public List<Quiz> listToday() {
         Instant now = Instant.now();
         return quizRepository.findAll().stream()
@@ -137,6 +142,8 @@ public class QuizServiceImpl implements QuizService {
                 })
                 .orElse(null);
     }
+
+    
 
     @Override
     public void ensurePlayable(Long id) {
