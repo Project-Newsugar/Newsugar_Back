@@ -19,27 +19,42 @@ import java.util.Objects;
 public class JwtUtil {
     private final String JWT_SECRET;
     private final long JWT_EXPIRATION;
+    private final String JWT_REFRESH_SECRET;
+    private final long JWT_REFRESH_EXPIRATION;
     private final Key key;
+    private final Key refreshKey;
 
     public JwtUtil() {
         Dotenv dotenv = Dotenv.load();
         this.JWT_SECRET = dotenv.get("JWT_SECRET");
         this.JWT_EXPIRATION = Long.parseLong(Objects.requireNonNull(dotenv.get("JWT_EXPIRATION")));
+        this.JWT_REFRESH_SECRET = dotenv.get("JWT_REFRESH_SECRET");
+        this.JWT_REFRESH_EXPIRATION = Long.parseLong(Objects.requireNonNull(dotenv.get("JWT_REFRESH_EXPIRATION")));
         this.key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
+        this.refreshKey = Keys.hmacShaKeyFor(JWT_REFRESH_SECRET.getBytes());
     }
 
     public String generateToken (Long userId){
         Date now = new Date();
         Date expiry = new Date(now.getTime() + JWT_EXPIRATION);
 
-        byte[] keyBytes = JWT_SECRET.getBytes(StandardCharsets.UTF_8);
-        Key hmacKey = Keys.hmacShaKeyFor(keyBytes);
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken (Long userId){
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + JWT_REFRESH_EXPIRATION);
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(hmacKey, SignatureAlgorithm.HS256)
+                .signWith(refreshKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -47,6 +62,17 @@ public class JwtUtil {
         return Long.parseLong(
                 Jwts.parserBuilder()
                         .setSigningKey(key)
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .getSubject()
+        );
+    }
+
+    public Long validateRefresh(String token){
+        return Long.parseLong(
+                Jwts.parserBuilder()
+                        .setSigningKey(refreshKey)
                         .build()
                         .parseClaimsJws(token)
                         .getBody()
