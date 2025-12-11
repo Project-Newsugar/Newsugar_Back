@@ -1,41 +1,69 @@
 package newsugar.domain.news.service;
 
-import newsugar.domain.news.dto.NewsDto;
-import newsugar.domain.news.model.NewsCategory;
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
-import com.rometools.rome.feed.synd.SyndEntry;
+import lombok.RequiredArgsConstructor;
+import newsugar.domain.news.dto.NewsDto;
+import newsugar.domain.news.model.NewsCategory;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class RSSServiceImpl implements RSSService {
+@RequiredArgsConstructor
+public class RSSServiceImpl {
 
-    @Override
-    public List<NewsDto> fetchRss(String rssUrl) {
-        List<NewsDto> list = new ArrayList<>();
-
+    // RFC1123 포맷 파싱, KST로 변환 후 LocalDateTime 반환
+    public LocalDateTime parseDate(String pubDate) {
+        if (pubDate == null || pubDate.isBlank()) return LocalDateTime.now();
         try {
-            URL feedSource = new URL(rssUrl);
+            ZonedDateTime zdt = ZonedDateTime.parse(pubDate, DateTimeFormatter.RFC_1123_DATE_TIME);
+            return zdt.withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+        } catch (Exception e) {
+            // 어떤 RSS는 다른 형식이므로 fallback 시도
+            try {
+                Instant instant = Instant.parse(pubDate);
+                return LocalDateTime.ofInstant(instant, ZoneId.of("Asia/Seoul"));
+            } catch (Exception ex) {
+                return LocalDateTime.now();
+            }
+        }
+    }
+
+    // RSS 읽어서 NewsDto 리스트 반환 (예시, rometools 사용)
+    public List<NewsDto> fetchRss(String rssUrl, NewsCategory category) {
+        List<NewsDto> result = new ArrayList<>();
+        try (XmlReader reader = new XmlReader(new URL(rssUrl))) {
             SyndFeedInput input = new SyndFeedInput();
-            var feed = input.build(new XmlReader(feedSource));
+            SyndFeed feed = input.build(reader);
 
             for (SyndEntry entry : feed.getEntries()) {
-                list.add(new NewsDto(
-                        entry.getTitle(),
-                        entry.getDescription() != null ? entry.getDescription().getValue() : "",
-                        entry.getLink(),
-                        NewsCategory.IT
-                ));
+                String title = entry.getTitle();
+                String desc = entry.getDescription() != null ? entry.getDescription().getValue() : "";
+                String link = entry.getLink();
+                // publishedDate는 Date 타입일 수 있음
+                String pubDateStr = (entry.getPublishedDate() != null) ?
+                        DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC)
+                                .format(entry.getPublishedDate().toInstant().atZone(ZoneOffset.UTC))
+                        : null;
+                LocalDateTime publishedAt = entry.getPublishedDate() != null ?
+                        LocalDateTime.ofInstant(entry.getPublishedDate().toInstant(), ZoneId.of("Asia/Seoul"))
+                        : LocalDateTime.now();
+
+                // 또는 parseDate(pubDateStr)
+
+                result.add(new NewsDto(title, desc, link, category, publishedAt));
             }
-
         } catch (Exception e) {
-            throw new RuntimeException("RSS parsing failed: " + e.getMessage());
+            // 로깅
+            e.printStackTrace();
         }
-
-        return list;
+        return result;
     }
 }
