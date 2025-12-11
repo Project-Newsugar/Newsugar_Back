@@ -104,12 +104,43 @@ public class QuizServiceImpl implements QuizService {
         quizSubmissionRepository.save(submission);
 
         return new SubmitResult(total, correct, results, userId);
-<<<<<<< HEAD
     }
 
     @Override
     public SubmitResult score(Long id, List<Integer> answers) {
         return score(id, null, answers);
+    }
+
+    @Override
+    public List<Quiz> listToday() {
+        Instant now = Instant.now();
+        return quizRepository.findAll().stream()
+                .filter(q -> (q.getStartAt() == null || !now.isBefore(q.getStartAt()))
+                        && (q.getEndAt() == null || !now.isAfter(q.getEndAt())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Quiz> listByPeriod(Instant from, Instant to) {
+        List<Quiz> all = quizRepository.findAll();
+        return all.stream().filter(q -> {
+            Instant qs = q.getStartAt() != null ? q.getStartAt() : Instant.MIN;
+            Instant qe = q.getEndAt() != null ? q.getEndAt() : Instant.MAX;
+            return !(qe.isBefore(from) || qs.isAfter(to));
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public SubmitResult lastResult(Long quizId) {
+        return quizSubmissionRepository.findTopByQuiz_IdOrderByCreatedAtDesc(quizId)
+                .map(sub -> {
+                    int total = sub.getTotal();
+                    int correct = sub.getCorrect();
+                    List<Boolean> results = sub.getAnswers() != null ?
+                            sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
+                    return new SubmitResult(total, correct, results, sub.getUserId());
+                })
+                .orElse(null);
     }
 
     
@@ -153,89 +184,6 @@ public class QuizServiceImpl implements QuizService {
                 q.setText(d.text);
                 q.setOptions(d.options != null ? d.options : List.of());
                 q.setCorrectIndex(d.correctIndex);
-                questions.add(q);
-            }
-        }
-        Quiz quiz = new Quiz();
-        quiz.setSummary(summary);
-        quiz.setQuestions(questions);
-        return create(quiz);
-=======
->>>>>>> 0b6ed08 (feat(quiz): 요약 기반 AI 퀴즈 생성 서비스엔드포인트 추가\n- Summary 연동 및 AI 호출로 질문 생성\n- QuizService에 generateFromSummary 추가 및 구현\n- 컨트롤러에 /quizzes/summary/{summaryId}/generate 추가\n- 기존 구조 유지, 예외는 팀 공통 코드 사용)
-    }
-
-    @Override
-    public List<Quiz> listToday() {
-        Instant now = Instant.now();
-        return quizRepository.findAll().stream()
-                .filter(q -> (q.getStartAt() == null || !now.isBefore(q.getStartAt()))
-                        && (q.getEndAt() == null || !now.isAfter(q.getEndAt())))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Quiz> listByPeriod(Instant from, Instant to) {
-        List<Quiz> all = quizRepository.findAll();
-        return all.stream().filter(q -> {
-            Instant qs = q.getStartAt() != null ? q.getStartAt() : Instant.MIN;
-            Instant qe = q.getEndAt() != null ? q.getEndAt() : Instant.MAX;
-            return !(qe.isBefore(from) || qs.isAfter(to));
-        }).collect(Collectors.toList());
-    }
-
-    @Override
-    public SubmitResult lastResult(Long quizId) {
-        return quizSubmissionRepository.findTopByQuiz_IdOrderByCreatedAtDesc(quizId)
-                .map(sub -> {
-                    int total = sub.getTotal();
-                    int correct = sub.getCorrect();
-                    List<Boolean> results = sub.getAnswers() != null ?
-                            sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
-                    return new SubmitResult(total, correct, results, sub.getUserId());
-                })
-                .orElse(null);
-    }
-
-    @Override
-    public void ensurePlayable(Long id) {
-        Quiz quiz = get(id);
-        if (quiz == null) {
-            throw new CustomException(ErrorCode.QUIZ_NOT_FOUND, "퀴즈를 찾을 수 없습니다");
-        }
-        Instant now = Instant.now();
-        if ((quiz.getStartAt() != null && now.isBefore(quiz.getStartAt())) ||
-            (quiz.getEndAt() != null && now.isAfter(quiz.getEndAt()))) {
-            throw new CustomException(ErrorCode.QUIZ_EXPIRED, "퀴즈 시작 기간이 아닙니다");
-        }
-    }
-
-    @Override
-    public SubmitResult resultOrThrow(Long quizId) {
-        return quizSubmissionRepository.findTopByQuiz_IdOrderByCreatedAtDesc(quizId)
-                .map(sub -> {
-                    int total = sub.getTotal();
-                    int correct = sub.getCorrect();
-                    List<Boolean> results = sub.getAnswers() != null ?
-                            sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
-                    return new SubmitResult(total, correct, results, sub.getUserId());
-                })
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "결과가 없습니다"));
-    }
-
-    @Override
-    public Quiz generateFromSummary(Long summaryId) {
-        Summary summary = summaryRepository.findById(summaryId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "요약을 찾을 수 없습니다"));
-
-        List<AiQuizClient.QuestionData> gen = aiQuizClient.generate(summary.getSummaryText());
-        List<Question> questions = new ArrayList<>();
-        if (gen != null) {
-            for (AiQuizClient.QuestionData d : gen) {
-                Question q = new Question();
-                q.setText(d.text);
-                q.setOptions(d.options != null ? d.options : List.of());
-                q.setCorrectIndex(d.correctIndex);
-                q.setExplanation(d.explanation);
                 questions.add(q);
             }
         }

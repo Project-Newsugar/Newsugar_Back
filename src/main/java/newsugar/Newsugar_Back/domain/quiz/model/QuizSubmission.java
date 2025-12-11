@@ -52,10 +52,6 @@ public class QuizSubmission {
     @LastModifiedDate
     @Column(name = "updated_at")
     private Instant updatedAt;
-<<<<<<< HEAD
-=======
-
->>>>>>> 0b6ed08 (feat(quiz): 요약 기반 AI 퀴즈 생성 서비스엔드포인트 추가\n- Summary 연동 및 AI 호출로 질문 생성\n- QuizService에 generateFromSummary 추가 및 구현\n- 컨트롤러에 /quizzes/summary/{summaryId}/generate 추가\n- 기존 구조 유지, 예외는 팀 공통 코드 사용)
     @Column(name = "user_id")
     private Long userId;
 }
