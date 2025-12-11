@@ -235,6 +235,7 @@ public class QuizServiceImpl implements QuizService {
                 q.setText(d.text);
                 q.setOptions(d.options != null ? d.options : List.of());
                 q.setCorrectIndex(d.correctIndex);
+                q.setExplanation(d.explanation);
                 questions.add(q);
             }
         }
