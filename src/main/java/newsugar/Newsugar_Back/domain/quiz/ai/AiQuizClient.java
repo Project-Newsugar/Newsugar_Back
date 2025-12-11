@@ -26,6 +26,7 @@ public class AiQuizClient {
         public String text;
         public List<String> options;
         public Integer correctIndex;
+        public String explanation;
     }
 
     public AiQuizClient() {
@@ -66,6 +67,7 @@ public class AiQuizClient {
                     }
                     d.options = opts;
                     d.correctIndex = q.has("correctIndex") ? q.get("correctIndex").asInt() : null;
+                    d.explanation = q.has("explanation") && !q.get("explanation").isNull() ? q.get("explanation").asText() : null;
                     out.add(d);
                 }
             }

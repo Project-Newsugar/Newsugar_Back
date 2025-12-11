@@ -12,7 +12,6 @@ import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.service.JwtService;
 import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
 import newsugar.Newsugar_Back.domain.user.service.UserService;
-import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +23,6 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private final ScoreService scoreService;
-    private final JwtUtil jwtUtil;
 
 
     @PostMapping("/signup")

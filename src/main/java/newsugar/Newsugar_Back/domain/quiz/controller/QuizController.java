@@ -1,22 +1,19 @@
 package newsugar.Newsugar_Back.domain.quiz.controller;
 
 import newsugar.Newsugar_Back.common.ApiResult;
-import newsugar.Newsugar_Back.common.ErrorCode;
 import newsugar.Newsugar_Back.domain.quiz.dto.SubmitRequest;
 import newsugar.Newsugar_Back.domain.quiz.dto.SubmitResult;
 import newsugar.Newsugar_Back.domain.quiz.model.Quiz;
 import newsugar.Newsugar_Back.domain.quiz.model.Question;
-import newsugar.Newsugar_Back.domain.quiz.dto.CreateQuizRequest;
 import newsugar.Newsugar_Back.domain.quiz.dto.QuizResponse;
 import newsugar.Newsugar_Back.domain.quiz.service.QuizService;
 import newsugar.Newsugar_Back.domain.user.service.JwtService;
 import org.springframework.http.ResponseEntity;
-import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/quizzes")
+@RequestMapping("/api/v1/quizzes")
 @Validated
 public class QuizController {
     private final QuizService quizService;
@@ -98,7 +95,12 @@ public class QuizController {
         java.util.List<QuizResponse.QuestionView> views = new java.util.ArrayList<>();
         if (quiz.getQuestions() != null) {
             for (Question q : quiz.getQuestions()) {
-                views.add(new QuizResponse.QuestionView(q.getText(), q.getOptions(), includeAnswers ? q.getCorrectIndex() : null));
+                views.add(new QuizResponse.QuestionView(
+                        q.getText(),
+                        q.getOptions(),
+                        includeAnswers ? q.getCorrectIndex() : null,
+                        includeAnswers ? q.getExplanation() : null
+                ));
             }
         }
         return new QuizResponse(quiz.getId(), quiz.getTitle(), views, quiz.getStartAt(), quiz.getEndAt());

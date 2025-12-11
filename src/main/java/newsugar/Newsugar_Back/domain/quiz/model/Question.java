@@ -44,6 +44,9 @@ public class Question {
 
     private Integer correctIndex;
 
+    @Column(name = "explanation")
+    private String explanation;
+
     @CreatedDate
     private Instant createdAt;
 
