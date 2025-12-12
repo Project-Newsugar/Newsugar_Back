@@ -1,6 +1,7 @@
 package newsugar.Newsugar_Back.domain.quiz.service;
 
 import newsugar.Newsugar_Back.domain.quiz.dto.SubmitResult;
+import newsugar.Newsugar_Back.domain.quiz.dto.UserQuizStats;
 import newsugar.Newsugar_Back.domain.quiz.model.Question;
 import newsugar.Newsugar_Back.domain.quiz.model.Quiz;
 import newsugar.Newsugar_Back.domain.quiz.model.QuizSubmission;
@@ -103,7 +104,7 @@ public class QuizServiceImpl implements QuizService {
         submission.setUserId(userId);
         quizSubmissionRepository.save(submission);
 
-        return new SubmitResult(total, correct, results, userId);
+        return new SubmitResult(total, correct, results, userId, submission.getCreatedAt());
     }
 
     @Override
@@ -138,7 +139,7 @@ public class QuizServiceImpl implements QuizService {
                     int correct = sub.getCorrect();
                     List<Boolean> results = sub.getAnswers() != null ?
                             sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
-                    return new SubmitResult(total, correct, results, sub.getUserId());
+                    return new SubmitResult(total, correct, results, sub.getUserId(), sub.getCreatedAt());
                 })
                 .orElse(null);
     }
@@ -166,7 +167,7 @@ public class QuizServiceImpl implements QuizService {
                     int correct = sub.getCorrect();
                     List<Boolean> results = sub.getAnswers() != null ?
                             sub.getAnswers().stream().map(SubmissionAnswer::getCorrect).toList() : List.of();
-                    return new SubmitResult(total, correct, results, sub.getUserId());
+                    return new SubmitResult(total, correct, results, sub.getUserId(), sub.getCreatedAt());
                 })
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "결과가 없습니다"));
     }
@@ -191,5 +192,15 @@ public class QuizServiceImpl implements QuizService {
         quiz.setSummary(summary);
         quiz.setQuestions(questions);
         return create(quiz);
+    }
+
+    @Override
+    public UserQuizStats statsForUser(Long userId) {
+        List<QuizSubmission> subs = quizSubmissionRepository.findByUserId(userId);
+        int totalQuestions = subs.stream().mapToInt(QuizSubmission::getTotal).sum();
+        int totalCorrect = subs.stream().mapToInt(QuizSubmission::getCorrect).sum();
+        int submissionCount = subs.size();
+        int accuracyPercent = totalQuestions > 0 ? (int)Math.round((totalCorrect * 100.0) / totalQuestions) : 0;
+        return new UserQuizStats(totalQuestions, totalCorrect, submissionCount, accuracyPercent);
     }
 }
