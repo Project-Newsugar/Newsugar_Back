@@ -5,6 +5,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizRepository;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizSubmissionRepository;
+import newsugar.Newsugar_Back.domain.summary.repository.SummaryRepository;
+import newsugar.Newsugar_Back.domain.quiz.ai.AiQuizClient;
+import newsugar.Newsugar_Back.domain.score.Repository.ScoreRepository;
+import newsugar.Newsugar_Back.domain.user.repository.UserRepository;
+import newsugar.Newsugar_Back.domain.category.Repository.CategoryRepository;
+import newsugar.Newsugar_Back.domain.user.repository.UserCategoryRepository;
+import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 
 @SpringBootTest(properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
@@ -16,6 +24,30 @@ class NewsugarBackEndApplicationTests {
 
     @MockBean
     private QuizSubmissionRepository quizSubmissionRepository;
+
+    @MockBean
+    private SummaryRepository summaryRepository;
+
+    @MockBean
+    private AiQuizClient aiQuizClient;
+
+    @MockBean
+    private ScoreRepository scoreRepository;
+
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private CategoryRepository categoryRepository;
+
+    @MockBean
+    private UserCategoryRepository userCategoryRepository;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
     @Test
     void contextLoads() {

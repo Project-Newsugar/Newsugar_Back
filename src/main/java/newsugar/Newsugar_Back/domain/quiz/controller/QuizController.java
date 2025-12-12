@@ -6,6 +6,7 @@ import newsugar.Newsugar_Back.domain.quiz.dto.SubmitResult;
 import newsugar.Newsugar_Back.domain.quiz.model.Quiz;
 import newsugar.Newsugar_Back.domain.quiz.model.Question;
 import newsugar.Newsugar_Back.domain.quiz.dto.QuizResponse;
+import newsugar.Newsugar_Back.domain.quiz.dto.UserQuizStats;
 import newsugar.Newsugar_Back.domain.quiz.service.QuizService;
 import newsugar.Newsugar_Back.domain.user.service.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -88,6 +89,16 @@ public class QuizController {
     public ResponseEntity<ApiResult<SubmitResult>> result(@PathVariable Long id) {
         SubmitResult last = quizService.resultOrThrow(id);
         return ResponseEntity.ok(ApiResult.ok(last));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResult<UserQuizStats>> stats(
+            @RequestHeader("Authorization") String token
+    ) {
+        String actualToken = token != null ? token.replace("Bearer ", "") : null;
+        Long userId = jwtService.getUserIdFromToken(actualToken);
+        UserQuizStats stats = quizService.statsForUser(userId);
+        return ResponseEntity.ok(ApiResult.ok(stats));
     }
 
     private QuizResponse toResponse(Quiz quiz, boolean includeAnswers) {
