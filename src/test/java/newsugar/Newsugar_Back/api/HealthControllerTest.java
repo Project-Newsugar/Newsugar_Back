@@ -18,8 +18,8 @@ class HealthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private JwtUtil jwtUtil;
+//    @MockBean
+//    private JwtUtil jwtUtil;
 
     @Test
     void health_returns_ok() throws Exception {

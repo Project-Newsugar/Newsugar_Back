@@ -27,4 +27,17 @@ public class JwtService {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
         }
     }
+
+    public String refreshToken (String token){
+        if (token == null || token.isBlank()) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "Authorization 헤더가 존재하지 않습니다.");
+        }
+
+        try {
+            Long userId = jwtUtil.validateRefresh(token);
+            return jwtUtil.generateToken(userId);
+        } catch (io.jsonwebtoken.JwtException e) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+        }
+    }
 }

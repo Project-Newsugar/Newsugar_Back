@@ -44,7 +44,8 @@ public class UserService {
         }
 
         String token = jwtUtil.generateToken(user.getId());
-        return new UserLoginResponseDTO(token, user.getId());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
+        return new UserLoginResponseDTO(user.getId(), token, refreshToken);
     }
 
     public User signup (String name, String email, String rawPassword, String nickname, String phone){
