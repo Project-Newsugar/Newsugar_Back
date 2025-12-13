@@ -2,12 +2,15 @@ package newsugar.Newsugar_Back.domain.news.controller;
 
 import newsugar.Newsugar_Back.common.ApiResult;
 import newsugar.Newsugar_Back.domain.news.dto.DeepSearchResponseDTO;
+import newsugar.Newsugar_Back.domain.news.dto.NaverNewsResponseDTO;
 import newsugar.Newsugar_Back.domain.news.service.NewsApiService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/news")
@@ -26,6 +29,14 @@ public class NewsApiController {
             @RequestParam(required = false, defaultValue = "10") int page_size
     ) {
         DeepSearchResponseDTO response = newsApiService.getNewsByCategory(category, page, page_size);
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResult<List<NaverNewsResponseDTO.Item>>> search(
+            @RequestParam String keyword
+    ) {
+        List<NaverNewsResponseDTO.Item> response = newsApiService.getNewsByKeyword(keyword);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 }
