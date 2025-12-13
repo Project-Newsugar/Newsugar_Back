@@ -21,7 +21,7 @@ public class NewsApiController {
 
     @GetMapping
     public ResponseEntity<ApiResult<DeepSearchResponseDTO>> getNewsByCategory(
-            @RequestParam String category,
+            @RequestParam(required = false ) String category,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int page_size
     ) {

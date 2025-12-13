@@ -2,6 +2,7 @@ package newsugar.Newsugar_Back.domain.news.service;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import newsugar.Newsugar_Back.domain.news.dto.deepserviceDTO.DeepSearchResponseDTO;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -30,13 +31,22 @@ public class NewsApiService {
         int currentPageSize = (page_size != null) ? page_size : 10;
 
         // URL 생성
-        String url = UriComponentsBuilder
-                .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles/" + URLEncoder.encode(category, StandardCharsets.UTF_8))
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles")
                 .queryParam("api_key", apiKey)
                 .queryParam("page", currentPage)
-                .queryParam("page_size", currentPageSize)
-                .toUriString();
+                .queryParam("page_size", currentPageSize);
 
+        // category가 null이 아닐 때만 queryParam 추가
+        if (category != null) {
+            builder.queryParam("category", URLEncoder.encode(category, StandardCharsets.UTF_8));
+        }
+
+        String url = builder.toUriString();
+        System.out.println("Calling URL: " + url);
+
+        ResponseEntity<String> raw = restTemplate.getForEntity(url, String.class);
+        System.out.println(raw.getBody());
         // API 호출
         return restTemplate.getForObject(url, DeepSearchResponseDTO.class);
     }
