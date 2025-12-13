@@ -1,4 +1,4 @@
-package newsugar.Newsugar_Back.domain.news.dto;
+package newsugar.Newsugar_Back.domain.news.dto.deepserviceDTO;
 
 import java.util.List;
 
