@@ -31,23 +31,23 @@ public class NewsApiService {
         int currentPageSize = (page_size != null) ? page_size : 10;
 
         // URL 생성
-        UriComponentsBuilder builder = UriComponentsBuilder
-                .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles")
-                .queryParam("api_key", apiKey)
-                .queryParam("page", currentPage)
-                .queryParam("page_size", currentPageSize);
-
-        // category가 null이 아닐 때만 queryParam 추가
-        if (category != null) {
-            builder.queryParam("category", URLEncoder.encode(category, StandardCharsets.UTF_8));
+        String url;
+        if (category != null && !category.isBlank()) {
+            url = UriComponentsBuilder
+                    .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles/" + URLEncoder.encode(category, StandardCharsets.UTF_8))
+                    .queryParam("api_key", apiKey)
+                    .queryParam("page", currentPage)
+                    .queryParam("page_size", currentPageSize)
+                    .toUriString();
+        } else {
+            url = UriComponentsBuilder
+                    .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles")
+                    .queryParam("api_key", apiKey)
+                    .queryParam("page", currentPage)
+                    .queryParam("page_size", currentPageSize)
+                    .toUriString();
         }
 
-        String url = builder.toUriString();
-        System.out.println("Calling URL: " + url);
-
-        ResponseEntity<String> raw = restTemplate.getForEntity(url, String.class);
-        System.out.println(raw.getBody());
-        // API 호출
         return restTemplate.getForObject(url, DeepSearchResponseDTO.class);
     }
 
