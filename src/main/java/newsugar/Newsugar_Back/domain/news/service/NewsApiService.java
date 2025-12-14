@@ -10,6 +10,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class NewsApiService {
@@ -24,30 +26,34 @@ public class NewsApiService {
         this.apiKey = dotenv.get("NEWS_API_KEY");
     }
 
-    public DeepSearchResponseDTO getNewsByCategory(String category, Integer page, Integer page_size) {
-
-        // 기본값 설정
+    public DeepSearchResponseDTO getNewsByCategory(
+            List<String> categories,
+            Integer page,
+            Integer page_size
+    ) {
         int currentPage = (page != null) ? page : 1;
         int currentPageSize = (page_size != null) ? page_size : 10;
 
-        // URL 생성
-        String url;
-        if (category != null && !category.isBlank()) {
-            url = UriComponentsBuilder
-                    .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles/" + URLEncoder.encode(category, StandardCharsets.UTF_8))
+        UriComponentsBuilder builder =
+                UriComponentsBuilder.fromHttpUrl("https://api-v2.deepsearch.com/v1/articles")
+                        .queryParam("api_key", apiKey)
+                        .queryParam("page", currentPage)
+                        .queryParam("page_size", currentPageSize);
+
+        // 복수 카테고리 처리
+        if (categories != null && !categories.isEmpty()) {
+            String categoryPath = categories.stream()
+                    .map(c -> URLEncoder.encode(c, StandardCharsets.UTF_8))
+                    .collect(Collectors.joining(","));
+
+            builder = UriComponentsBuilder
+                    .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles/" + categoryPath)
                     .queryParam("api_key", apiKey)
                     .queryParam("page", currentPage)
-                    .queryParam("page_size", currentPageSize)
-                    .toUriString();
-        } else {
-            url = UriComponentsBuilder
-                    .fromHttpUrl("https://api-v2.deepsearch.com/v1/articles")
-                    .queryParam("api_key", apiKey)
-                    .queryParam("page", currentPage)
-                    .queryParam("page_size", currentPageSize)
-                    .toUriString();
+                    .queryParam("page_size", currentPageSize);
         }
 
+        String url = builder.toUriString();
         return restTemplate.getForObject(url, DeepSearchResponseDTO.class);
     }
 
