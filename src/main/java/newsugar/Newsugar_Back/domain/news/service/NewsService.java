@@ -2,7 +2,6 @@ package newsugar.Newsugar_Back.domain.news.service;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import newsugar.Newsugar_Back.domain.news.dto.deepserviceDTO.DeepSearchResponseDTO;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -14,12 +13,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class NewsApiService {
+public class NewsService {
 
     private final RestTemplate restTemplate;
     private final String apiKey;
 
-    public NewsApiService(RestTemplate restTemplate) {
+    public NewsService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
 
         Dotenv dotenv = Dotenv.load();
