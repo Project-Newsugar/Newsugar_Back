@@ -5,5 +5,5 @@ import java.util.List;
 public record UserPreferCategoryResponseDTO(
         Long id,
         Long userId,
-        List<String> categoryIdList
+        List<Long> categoryIdList
 ) {}

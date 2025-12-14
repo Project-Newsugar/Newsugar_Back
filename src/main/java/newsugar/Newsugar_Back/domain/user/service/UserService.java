@@ -154,8 +154,8 @@ public class UserService {
 
         List<UserCategory> userCategories = userCategoryRepository.findByUserId(userId);
 
-        List<String> categoryIdList = userCategories.stream()
-                .map(uc -> String.valueOf(uc.getCategory().getId()))
+        List<Long> categoryIdList = userCategories.stream()
+                .map(uc -> uc.getCategory().getId())
                 .collect(Collectors.toList());
 
         return new UserPreferCategoryResponseDTO(user.getId(), userId, categoryIdList);
