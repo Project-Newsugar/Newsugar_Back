@@ -44,8 +44,10 @@ public class AiProxyController {
             return ResponseEntity.status(401).body(jsonError("unauthorized"));
         }
         try {
-            String prompt = "다음 요약문을 기반으로 뉴스기사 관련련 4지선다 객관식 문제를 2개 생성하고 JSON으로만 반환하세요. " +
-                    "출력형식은 {\"questions\":[{\"text\":문장,\"options\":[옵션4],\"correctIndex\":정답인덱스,\"explanation\":해설}...]} 로 정확히 맞추세요. 요약문:" +
+            String prompt = "다음 요약문을 기반으로 한국 뉴스 관련 4지선다 객관식 문제를 2개 생성하세요. " +
+                    "반드시 순수 JSON만 반환하고, 코드블록이나 추가 텍스트는 금지합니다. " +
+                    "출력 형식은 정확히 {\"questions\":[{\"text\":\"문제 문장\",\"options\":[\"선지1\",\"선지2\",\"선지3\",\"선지4\"],\"correctIndex\":정수,\"explanation\":\"해설\"}]} 입니다. " +
+                    "모든 options 값은 서로 달라야 하며, correctIndex는 0~3 범위여야 합니다. 요약문: " +
                     (req != null ? req.summary : "");
 
             Map<String, Object> content = new HashMap<>();
@@ -57,7 +59,7 @@ public class AiProxyController {
             contents.put("contents", new Object[]{parts});
             String body = mapper.writeValueAsString(contents);
 
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey;
             HttpRequest httpReq = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")
@@ -65,6 +67,9 @@ public class AiProxyController {
                     .build();
 
             HttpResponse<String> res = client.send(httpReq, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            System.out.println("[AI-PROXY] /generate-quiz status=" + res.statusCode());
+            String bodyStr = res.body();
+            System.out.println("[AI-PROXY] /generate-quiz body-preview=" + (bodyStr != null ? bodyStr.substring(0, Math.min(bodyStr.length(), 500)) : "null"));
             if (res.statusCode() >= 300) {
                 return ResponseEntity.status(500).body(jsonError("AI 호출 실패"));
             }
@@ -83,15 +88,24 @@ public class AiProxyController {
                 return ResponseEntity.status(500).body(jsonError("AI 텍스트 없음"));
             }
             String trimmed = text.trim();
-            if (!trimmed.startsWith("{")) {
+            String jsonText = trimmed;
+            if (!jsonText.startsWith("{")) {
+                int start = jsonText.indexOf('{');
+                int end = jsonText.lastIndexOf('}');
+                if (start >= 0 && end > start) {
+                    jsonText = jsonText.substring(start, end + 1).trim();
+                }
+            }
+            if (!jsonText.startsWith("{")) {
                 return ResponseEntity.status(500).body(jsonError("JSON 형식 아님"));
             }
-            JsonNode json = mapper.readTree(trimmed);
+            JsonNode json = mapper.readTree(jsonText);
             if (!json.has("questions") || !json.get("questions").isArray()) {
                 return ResponseEntity.status(500).body(jsonError("필드 누락"));
             }
             return ResponseEntity.ok(mapper.writeValueAsString(json));
         } catch (Exception e) {
+            System.out.println("[AI-PROXY] /generate-quiz exception=" + e.getMessage());
             return ResponseEntity.status(500).body(jsonError("AI 처리 오류"));
         }
     }
@@ -106,8 +120,9 @@ public class AiProxyController {
             return ResponseEntity.status(401).body(jsonError("unauthorized"));
         }
         try {
-            String prompt = "다음 텍스트를 뉴스 요약문으로 간결하게 정리하고 JSON으로만 반환하세요. " +
-                    "출력형식은 {\"summary\":요약문} 형태로 정확히 맞추세요. 텍스트:" +
+            String prompt = "다음 텍스트를 한국어 뉴스 요약문으로 간결하게 정리하세요. " +
+                    "반드시 순수 JSON만 반환하고, 코드블록이나 추가 텍스트는 금지합니다. " +
+                    "출력 형식은 정확히 {\"summary\":\"요약문\"} 입니다. 텍스트: " +
                     (req != null ? req.content : "");
 
             Map<String, Object> textPart = new HashMap<>();
@@ -118,7 +133,7 @@ public class AiProxyController {
             contents.put("contents", new Object[]{parts});
             String body = mapper.writeValueAsString(contents);
 
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey;
             HttpRequest httpReq = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")
@@ -126,6 +141,9 @@ public class AiProxyController {
                     .build();
 
             HttpResponse<String> res = client.send(httpReq, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            System.out.println("[AI-PROXY] /summarize status=" + res.statusCode());
+            String bodyStr = res.body();
+            System.out.println("[AI-PROXY] /summarize body-preview=" + (bodyStr != null ? bodyStr.substring(0, Math.min(bodyStr.length(), 500)) : "null"));
             if (res.statusCode() >= 300) {
                 return ResponseEntity.status(500).body(jsonError("AI 호출 실패"));
             }
@@ -144,15 +162,24 @@ public class AiProxyController {
                 return ResponseEntity.status(500).body(jsonError("AI 텍스트 없음"));
             }
             String trimmed = text.trim();
-            if (!trimmed.startsWith("{")) {
+            String jsonText = trimmed;
+            if (!jsonText.startsWith("{")) {
+                int start = jsonText.indexOf('{');
+                int end = jsonText.lastIndexOf('}');
+                if (start >= 0 && end > start) {
+                    jsonText = jsonText.substring(start, end + 1).trim();
+                }
+            }
+            if (!jsonText.startsWith("{")) {
                 return ResponseEntity.status(500).body(jsonError("JSON 형식 아님"));
             }
-            JsonNode json = mapper.readTree(trimmed);
+            JsonNode json = mapper.readTree(jsonText);
             if (!json.has("summary") || !json.get("summary").isTextual()) {
                 return ResponseEntity.status(500).body(jsonError("필드 누락"));
             }
             return ResponseEntity.ok(mapper.writeValueAsString(json));
         } catch (Exception e) {
+            System.out.println("[AI-PROXY] /summarize exception=" + e.getMessage());
             return ResponseEntity.status(500).body(jsonError("AI 처리 오류"));
         }
     }

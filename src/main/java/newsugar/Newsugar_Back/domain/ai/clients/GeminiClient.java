@@ -14,14 +14,14 @@ public class GeminiClient {
 
     public GeminiClient() {
         Dotenv env = Dotenv.load();
-        this.apiKey = env.get("QUIZ_API_KEY");
+        this.apiKey = env.get("QUIZ_AI_API_KEY");
         if (this.apiKey == null || this.apiKey.isBlank()) {
             throw new RuntimeException("Gemini API Key가 설정되지 않았습니다.");
         }
     }
 
     public String summarizeCategory(String prompt) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey;
 
         GeminiRequestDTO request = GeminiRequestDTO.of(prompt);
 
