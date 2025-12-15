@@ -14,6 +14,7 @@ import newsugar.Newsugar_Back.domain.user.repository.UserCategoryRepository;
 import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 
+
 @SpringBootTest(properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
 })
