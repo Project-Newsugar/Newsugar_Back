@@ -8,6 +8,7 @@ import newsugar.Newsugar_Back.domain.category.Repository.CategoryRepository;
 import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserCategoryResponseDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Response.UserPreferCategoryResponseDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.model.UserCategory;
 import newsugar.Newsugar_Back.domain.user.repository.UserCategoryRepository;
@@ -15,6 +16,9 @@ import newsugar.Newsugar_Back.domain.user.repository.UserRepository;
 import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -141,6 +145,20 @@ public class UserService {
                 );
 
         userCategoryRepository.delete(userCategory);
+    }
+
+    public UserPreferCategoryResponseDTO getPreferCategory(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        List<UserCategory> userCategories = userCategoryRepository.findByUserId(userId);
+
+        List<Long> categoryIdList = userCategories.stream()
+                .map(uc -> uc.getCategory().getId())
+                .collect(Collectors.toList());
+
+        return new UserPreferCategoryResponseDTO(user.getId(), userId, categoryIdList);
     }
 
 }
