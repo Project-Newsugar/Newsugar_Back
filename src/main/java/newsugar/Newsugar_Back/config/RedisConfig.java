@@ -14,7 +14,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     private final Dotenv dotenv = Dotenv.load();
-
     private final String host = dotenv.get("REDIS_HOST");
     private final int port = Integer.parseInt(dotenv.get("REDIS_PORT"));
 

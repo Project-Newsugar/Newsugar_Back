@@ -7,7 +7,7 @@ import newsugar.Newsugar_Back.domain.quiz.model.QuizSubmission;
 import newsugar.Newsugar_Back.domain.quiz.model.SubmissionAnswer;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizRepository;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizSubmissionRepository;
-import newsugar.Newsugar_Back.domain.quiz.ai.AiQuizClient;
+import newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient;
 import newsugar.Newsugar_Back.domain.summary.repository.SummaryRepository;
 import newsugar.Newsugar_Back.domain.summary.model.Summary;
 import newsugar.Newsugar_Back.common.CustomException;
