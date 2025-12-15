@@ -6,11 +6,8 @@ import newsugar.Newsugar_Back.domain.user.dto.JwtRefreshTokenDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserCategoryRequestDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserLoginRequestDTO;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserModifyRequestDTO;
-import newsugar.Newsugar_Back.domain.user.dto.Response.UserCategoryResponseDTO;
-import newsugar.Newsugar_Back.domain.user.dto.Response.UserInfoResponseDTO;
-import newsugar.Newsugar_Back.domain.user.dto.Response.UserLoginResponseDTO;
+import newsugar.Newsugar_Back.domain.user.dto.Response.*;
 import newsugar.Newsugar_Back.domain.user.dto.Request.UserSignupRequestDTO;
-import newsugar.Newsugar_Back.domain.user.dto.Response.UserResponseDTO;
 import newsugar.Newsugar_Back.domain.user.model.User;
 import newsugar.Newsugar_Back.domain.user.service.JwtService;
 import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
@@ -134,9 +131,18 @@ public class UserController {
 
         userService.deleteCategory(userId, categoryId);
 
-
-
         return ResponseEntity.ok(ApiResult.ok("즐겨찾기가 해제되었습니다." ));
+    }
+
+    @GetMapping("/my-category")
+    public ResponseEntity<ApiResult<UserPreferCategoryResponseDTO>> getPreferCategory(
+            @RequestHeader("Authorization") String token
+    ){
+        String actualToken = token != null ? token.replace("Bearer ", "") : null;
+        Long userId = jwtService.getUserIdFromToken(actualToken);
+
+        UserPreferCategoryResponseDTO response = userService.getPreferCategory(userId);
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @PostMapping("/refresh")
