@@ -62,6 +62,10 @@ public class AiQuizClient {
             if (timeoutMs > 0) rb = rb.timeout(Duration.ofMillis(timeoutMs));
             HttpRequest req = rb.build();
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            System.out.println("[AI-CLIENT] request url=" + (baseUrl + "/generate-quiz"));
+            System.out.println("[AI-CLIENT] status=" + res.statusCode());
+            String preview = res.body();
+            System.out.println("[AI-CLIENT] body-preview=" + (preview != null ? preview.substring(0, Math.min(preview.length(), 500)) : "null"));
             if (res.statusCode() >= 300) {
                 throw new CustomException(ErrorCode.INTERNAL_ERROR, "AI 호출 실패");
             }
@@ -85,6 +89,42 @@ public class AiQuizClient {
             }
             return out;
         } catch (Exception e) {
+            System.out.println("[AI-CLIENT] exception=" + e.getMessage());
+            throw new CustomException(ErrorCode.INTERNAL_ERROR, "AI 처리 오류");
+        }
+    }
+
+    public String summarize(String content) {
+        if (baseUrl == null || apiKey == null) {
+            throw new CustomException(ErrorCode.INTERNAL_ERROR, "AI 설정이 없습니다");
+        }
+        try {
+            String body = mapper.createObjectNode()
+                    .put("content", content)
+                    .toString();
+            HttpRequest.Builder rb = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + "/summarize"))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
+            if (timeoutMs > 0) rb = rb.timeout(Duration.ofMillis(timeoutMs));
+            HttpRequest req = rb.build();
+            HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            System.out.println("[AI-CLIENT] request url=" + (baseUrl + "/summarize"));
+            System.out.println("[AI-CLIENT] status=" + res.statusCode());
+            String preview = res.body();
+            System.out.println("[AI-CLIENT] body-preview=" + (preview != null ? preview.substring(0, Math.min(preview.length(), 500)) : "null"));
+            if (res.statusCode() >= 300) {
+                throw new CustomException(ErrorCode.INTERNAL_ERROR, "AI 호출 실패");
+            }
+            JsonNode root = mapper.readTree(res.body());
+            JsonNode summaryNode = root.get("summary");
+            if (summaryNode == null || !summaryNode.isTextual()) {
+                throw new CustomException(ErrorCode.INTERNAL_ERROR, "AI 처리 오류");
+            }
+            return summaryNode.asText();
+        } catch (Exception e) {
+            System.out.println("[AI-CLIENT] exception=" + e.getMessage());
             throw new CustomException(ErrorCode.INTERNAL_ERROR, "AI 처리 오류");
         }
     }

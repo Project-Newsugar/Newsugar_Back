@@ -18,4 +18,5 @@ public interface QuizService {
     SubmitResult resultOrThrow(Long quizId);
     Quiz generateFromSummary(Long summaryId);
     UserQuizStats statsForUser(Long userId);
+    boolean hasSubmission(Long quizId, Long userId);
 }

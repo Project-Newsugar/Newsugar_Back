@@ -203,4 +203,15 @@ public class QuizServiceImpl implements QuizService {
         int accuracyPercent = totalQuestions > 0 ? (int)Math.round((totalCorrect * 100.0) / totalQuestions) : 0;
         return new UserQuizStats(totalQuestions, totalCorrect, submissionCount, accuracyPercent);
     }
+
+    @Override
+    public boolean hasSubmission(Long quizId, Long userId) {
+        List<QuizSubmission> subs = quizSubmissionRepository.findByUserId(userId);
+        if (subs == null || subs.isEmpty()) return false;
+        for (QuizSubmission s : subs) {
+            Quiz q = s.getQuiz();
+            if (q != null && q.getId() != null && q.getId().equals(quizId)) return true;
+        }
+        return false;
+    }
 }
