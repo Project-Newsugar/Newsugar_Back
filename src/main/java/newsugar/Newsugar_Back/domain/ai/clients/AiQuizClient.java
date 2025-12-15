@@ -1,4 +1,4 @@
-package newsugar.Newsugar_Back.domain.quiz.ai;
+package newsugar.Newsugar_Back.domain.ai.clients;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
