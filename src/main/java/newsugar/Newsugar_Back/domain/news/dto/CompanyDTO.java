@@ -1,8 +1,0 @@
-package newsugar.Newsugar_Back.domain.news.dto;
-
-public record CompanyDTO(
-        String name,
-        String symbol,
-        String exchange,
-        Object sentiment
-) {}
