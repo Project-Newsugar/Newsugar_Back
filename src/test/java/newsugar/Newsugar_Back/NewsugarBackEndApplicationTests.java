@@ -2,7 +2,6 @@ package newsugar.Newsugar_Back;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizRepository;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizSubmissionRepository;
 import newsugar.Newsugar_Back.domain.summary.repository.SummaryRepository;
@@ -12,6 +11,7 @@ import newsugar.Newsugar_Back.domain.user.repository.UserRepository;
 import newsugar.Newsugar_Back.domain.category.Repository.CategoryRepository;
 import newsugar.Newsugar_Back.domain.user.repository.UserCategoryRepository;
 import newsugar.Newsugar_Back.domain.user.utils.JwtUtil;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 
 
