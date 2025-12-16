@@ -14,8 +14,8 @@ public class Schedular {
         this.categorySummaryService = categorySummaryService;
     }
 
-    // 6시간마다 실행 (cron: 초 분 시 일 월 요일)
-    @Scheduled(cron = "0 0 0,6,12,18 * * *")
+    // 1시간마다 실행 (cron: 초 분 시 일 월 요일)
+    @Scheduled(cron = "0 0 * * * *")
     public void generateAllCategorySummaries() {
         System.out.println("Generating Category Summaries...");
         for (String category : categories) {
