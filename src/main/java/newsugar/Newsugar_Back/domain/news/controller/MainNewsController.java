@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/v1/news")
@@ -100,5 +104,55 @@ public class MainNewsController {
         String todaySummary = geminiService.summarize("오늘 주요", summaries);
         categorySummaryRedis.saveSummary(redisKey, todaySummary);
         return ResponseEntity.ok(ApiResult.ok(todaySummary));
+    }
+
+    @GetMapping("/today-main-summary-by-time")
+    public ResponseEntity<ApiResult<String>> getTodayMainSummaryByTime(
+            @RequestParam Integer hour
+    ) {
+        int target = hour != null ? hour : 0;
+        if (target == 24) target = 0;
+        if (target != 0 && target != 6 && target != 12 && target != 18) {
+            java.util.Optional<Summary> latest = summaryRepository.findAll().stream()
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                    .findFirst();
+            if (latest.isPresent()) {
+                String txt = latest.get().getSummaryText();
+                if (txt != null && !txt.isBlank()) {
+                    return ResponseEntity.ok(ApiResult.ok(txt));
+                }
+            }
+            return ResponseEntity.ok(ApiResult.ok(""));
+        }
+
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate today = LocalDate.now(zone);
+        LocalDateTime start = today.atTime(target, 0);
+        Instant from = start.atZone(zone).toInstant();
+        Instant to = start.plusHours(6).atZone(zone).toInstant();
+
+        java.util.Optional<Summary> slot = summaryRepository.findAll().stream()
+                .filter(s -> s.getCreatedAt() != null && !s.getCreatedAt().isBefore(from) && s.getCreatedAt().isBefore(to))
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .findFirst();
+
+        if (slot.isPresent()) {
+            String txt = slot.get().getSummaryText();
+            if (txt != null && !txt.isBlank()) {
+                return ResponseEntity.ok(ApiResult.ok(txt));
+            }
+        }
+
+        java.util.Optional<Summary> latest = summaryRepository.findAll().stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .findFirst();
+        if (latest.isPresent()) {
+            String txt = latest.get().getSummaryText();
+            if (txt != null && !txt.isBlank()) {
+                return ResponseEntity.ok(ApiResult.ok(txt));
+            }
+        }
+
+        return ResponseEntity.ok(ApiResult.ok(""));
     }
 }

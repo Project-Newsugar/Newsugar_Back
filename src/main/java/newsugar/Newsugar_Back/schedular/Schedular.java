@@ -61,7 +61,7 @@ public class Schedular {
         }
     }
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 0,6,12,18 * * *")
     public void generateTodayMainSummary() {
         DeepSearchResponseDTO news;
         try {
