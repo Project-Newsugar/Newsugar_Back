@@ -27,7 +27,11 @@ public class MainNewsController {
     private final CategorySummaryRedis categorySummaryRedis;
     private final SummaryRepository summaryRepository;
 
-    public MainNewsController(RssNewsService rssNewsService, NewsService newsService, GeminiService geminiService, CategorySummaryRedis categorySummaryRedis, SummaryRepository summaryRepository) {
+    public MainNewsController(RssNewsService rssNewsService,
+                              NewsService newsService,
+                              GeminiService geminiService,
+                              CategorySummaryRedis categorySummaryRedis,
+                              SummaryRepository summaryRepository) {
         this.rssNewsService = rssNewsService;
         this.newsService = newsService;
         this.geminiService = geminiService;
