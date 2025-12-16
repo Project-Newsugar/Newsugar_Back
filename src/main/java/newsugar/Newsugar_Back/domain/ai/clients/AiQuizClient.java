@@ -70,16 +70,37 @@ public class AiQuizClient {
             List<QuestionData> out = new ArrayList<>();
             if (qs != null && qs.isArray()) {
                 for (JsonNode q : qs) {
-                    QuestionData d = new QuestionData();
-                    d.text = q.get("text").asText();
+                    if (q == null || q.isNull()) continue;
+
+                    JsonNode textNode = q.get("text");
+                    if (textNode == null || !textNode.isTextual()) continue;
+                    String text = textNode.asText();
+                    if (text == null || text.isBlank()) continue;
+
                     List<String> opts = new ArrayList<>();
                     JsonNode arr = q.get("options");
                     if (arr != null && arr.isArray()) {
-                        for (JsonNode o : arr) opts.add(o.asText());
+                        for (JsonNode o : arr) {
+                            if (o != null && o.isTextual()) {
+                                String v = o.asText();
+                                if (v != null && !v.isBlank()) {
+                                    opts.add(v);
+                                }
+                            }
+                        }
                     }
+                    if (opts.size() < 2) continue;
+
+                    JsonNode ciNode = q.get("correctIndex");
+                    if (ciNode == null || !ciNode.isInt()) continue;
+                    int idx = ciNode.asInt();
+                    if (idx < 0 || idx >= opts.size()) continue;
+
+                    QuestionData d = new QuestionData();
+                    d.text = text;
                     d.options = opts;
-                    d.correctIndex = q.has("correctIndex") ? q.get("correctIndex").asInt() : null;
-                    d.explanation = q.has("explanation") && !q.get("explanation").isNull() ? q.get("explanation").asText() : null;
+                    d.correctIndex = idx;
+                    d.explanation = q.has("explanation") && !q.get("explanation").isNull() && q.get("explanation").isTextual() ? q.get("explanation").asText() : null;
                     out.add(d);
                 }
             }

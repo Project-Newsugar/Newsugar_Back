@@ -44,6 +44,9 @@ public class QuizServiceImpl implements QuizService {
         }
         if (quiz.getQuestions() != null) {
             for (Question q : quiz.getQuestions()) {
+                if (q.getText() == null || q.getText().isBlank()) {
+                    throw new CustomException(ErrorCode.BAD_REQUEST, "문제 내용이 비어 있습니다");
+                }
                 if (q.getOptions() == null || q.getOptions().size() < 2) {
                     throw new CustomException(ErrorCode.BAD_REQUEST, "객관식 옵션은 최소 2개 이상이어야 합니다");
                 }
@@ -73,7 +76,7 @@ public class QuizServiceImpl implements QuizService {
             throw new CustomException(ErrorCode.QUIZ_EXPIRED, "퀴즈 제출 기간이 아닙니다");
         }
 
-        List<Question> qs = quiz.getQuestions();
+        List<Question> qs = quiz.getQuestions() != null ? quiz.getQuestions() : List.of();
         int total = qs.size();
         int correct = 0;
         List<Boolean> results = new ArrayList<>();
@@ -179,14 +182,13 @@ public class QuizServiceImpl implements QuizService {
 
         List<AiQuizClient.QuestionData> gen = aiQuizClient.generate(summary.getSummaryText());
         List<Question> questions = new ArrayList<>();
-        if (gen != null) {
-            for (AiQuizClient.QuestionData d : gen) {
-                Question q = new Question();
-                q.setText(d.text);
-                q.setOptions(d.options != null ? d.options : List.of());
-                q.setCorrectIndex(d.correctIndex);
-                questions.add(q);
-            }
+        if (gen != null && !gen.isEmpty()) {
+            AiQuizClient.QuestionData d = gen.get(0);
+            Question q = new Question();
+            q.setText(d.text);
+            q.setOptions(d.options != null ? d.options : List.of());
+            q.setCorrectIndex(d.correctIndex);
+            questions.add(q);
         }
         Quiz quiz = new Quiz();
         quiz.setSummary(summary);
@@ -197,6 +199,9 @@ public class QuizServiceImpl implements QuizService {
     @Override
     public UserQuizStats statsForUser(Long userId) {
         List<QuizSubmission> subs = quizSubmissionRepository.findByUserId(userId);
+        if (subs == null || subs.isEmpty()) {
+            return new UserQuizStats(0, 0, 0, 0);
+        }
         int totalQuestions = subs.stream().mapToInt(QuizSubmission::getTotal).sum();
         int totalCorrect = subs.stream().mapToInt(QuizSubmission::getCorrect).sum();
         int submissionCount = subs.size();
