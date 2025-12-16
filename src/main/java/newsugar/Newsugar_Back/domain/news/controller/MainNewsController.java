@@ -6,6 +6,9 @@ import newsugar.Newsugar_Back.domain.news.dto.deepserviceDTO.ArticleDTO;
 import newsugar.Newsugar_Back.domain.news.dto.deepserviceDTO.DeepSearchResponseDTO;
 import newsugar.Newsugar_Back.domain.news.service.NewsService;
 import newsugar.Newsugar_Back.domain.news.service.RssNewsService;
+import newsugar.Newsugar_Back.domain.summary.model.Summary;
+import newsugar.Newsugar_Back.domain.summary.repository.CategorySummaryRedis;
+import newsugar.Newsugar_Back.domain.summary.repository.SummaryRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,11 +24,15 @@ public class MainNewsController {
     private final RssNewsService rssNewsService;
     private final NewsService newsService;
     private final GeminiService geminiService;
+    private final CategorySummaryRedis categorySummaryRedis;
+    private final SummaryRepository summaryRepository;
 
-    public MainNewsController(RssNewsService rssNewsService, NewsService newsService, GeminiService geminiService) {
+    public MainNewsController(RssNewsService rssNewsService, NewsService newsService, GeminiService geminiService, CategorySummaryRedis categorySummaryRedis, SummaryRepository summaryRepository) {
         this.rssNewsService = rssNewsService;
         this.newsService = newsService;
         this.geminiService = geminiService;
+        this.categorySummaryRedis = categorySummaryRedis;
+        this.summaryRepository = summaryRepository;
     }
 
     @GetMapping("/today-summary")
@@ -51,6 +58,21 @@ public class MainNewsController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "5") Integer page_size
     ) {
+        String redisKey = "today_main_summary";
+        String cached = categorySummaryRedis.getSummary(redisKey);
+        if (cached != null && !cached.isBlank()) {
+            return ResponseEntity.ok(ApiResult.ok(cached));
+        }
+        java.util.Optional<Summary> latest = summaryRepository.findAll().stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .findFirst();
+        if (latest.isPresent()) {
+            String txt = latest.get().getSummaryText();
+            if (txt != null && !txt.isBlank()) {
+                categorySummaryRedis.saveSummary(redisKey, txt);
+                return ResponseEntity.ok(ApiResult.ok(txt));
+            }
+        }
         DeepSearchResponseDTO response;
         try {
             response = newsService.getNewsByCategory(null, page, page_size);
@@ -72,6 +94,7 @@ public class MainNewsController {
             return ResponseEntity.ok(ApiResult.ok(""));
         }
         String todaySummary = geminiService.summarize("오늘 주요", summaries);
+        categorySummaryRedis.saveSummary(redisKey, todaySummary);
         return ResponseEntity.ok(ApiResult.ok(todaySummary));
     }
 }

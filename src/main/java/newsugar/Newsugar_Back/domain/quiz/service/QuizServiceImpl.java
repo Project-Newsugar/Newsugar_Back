@@ -9,6 +9,7 @@ import newsugar.Newsugar_Back.domain.quiz.model.SubmissionAnswer;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizRepository;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizSubmissionRepository;
 import newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient;
+import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
 import newsugar.Newsugar_Back.domain.summary.repository.SummaryRepository;
 import newsugar.Newsugar_Back.domain.summary.model.Summary;
 import newsugar.Newsugar_Back.common.CustomException;
@@ -27,12 +28,14 @@ public class QuizServiceImpl implements QuizService {
     private final QuizSubmissionRepository quizSubmissionRepository;
     private final SummaryRepository summaryRepository;
     private final AiQuizClient aiQuizClient;
+    private final ScoreService scoreService;
 
-    public QuizServiceImpl(QuizRepository quizRepository, QuizSubmissionRepository quizSubmissionRepository, SummaryRepository summaryRepository, AiQuizClient aiQuizClient) {
+    public QuizServiceImpl(QuizRepository quizRepository, QuizSubmissionRepository quizSubmissionRepository, SummaryRepository summaryRepository, AiQuizClient aiQuizClient, ScoreService scoreService) {
         this.quizRepository = quizRepository;
         this.quizSubmissionRepository = quizSubmissionRepository;
         this.summaryRepository = summaryRepository;
         this.aiQuizClient = aiQuizClient;
+        this.scoreService = scoreService;
     }
 
     @Override
@@ -109,6 +112,13 @@ public class QuizServiceImpl implements QuizService {
         submission.setCorrect(correct);
         submission.setUserId(userId);
         quizSubmissionRepository.save(submission);
+
+        if (userId != null) {
+            int gainedScore = total > 0 ? (int)Math.round((correct * 100.0) / total) : 0;
+            if (gainedScore > 0) {
+                scoreService.addScore(userId, gainedScore);
+            }
+        }
 
         return new SubmitResult(total, correct, results, userId, submission.getCreatedAt());
     }

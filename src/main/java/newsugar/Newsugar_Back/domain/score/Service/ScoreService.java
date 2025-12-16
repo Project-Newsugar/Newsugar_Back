@@ -28,6 +28,18 @@ public class ScoreService {
         return score.getScore();
     }
 
+    public void addScore(Long userId, int delta){
+        Score score = scoreRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        Integer current = score.getScore();
+        if (current == null) {
+            current = 0;
+        }
+        score.setScore(current + delta);
+        scoreRepository.save(score);
+    }
+
     public Score createScore (Long userId){
          User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND, "사용자를 찾을 수 없습니다."));

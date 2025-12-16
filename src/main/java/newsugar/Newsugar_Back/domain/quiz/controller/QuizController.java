@@ -89,81 +89,18 @@ public class QuizController {
     ) {
         String actualToken = token != null ? token.replace("Bearer ", "") : null;
         jwtService.getUserIdFromToken(actualToken);
-
-        DeepSearchResponseDTO news;
-        try {
-            news = newsService.getNewsByCategory(null, 1, 5);
-            boolean empty = (news == null) || (news.data() == null) || news.data().isEmpty();
-            if (empty) {
-                news = rssNewsService.getTopHeadlines(1, 5);
-            }
-        } catch (Exception e) {
-            news = rssNewsService.getTopHeadlines(1, 5);
-        }
-        java.util.List<ArticleDTO> items = (news != null && news.data() != null) ? news.data() : java.util.List.of();
-        java.util.List<String> summaries = new java.util.ArrayList<>();
-        for (int i = 0; i < Math.min(5, items.size()); i++) {
-            String s = items.get(i).summary();
-            if (s != null) {
-                s = s.replaceAll("<[^>]*>", " ").replaceAll("&[^;]+;", " ").trim();
-                if (!s.isBlank()) summaries.add(s);
-            }
-        }
-        String aggregated = String.join("\n- ", summaries);
-
-        java.util.List<newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData> gen;
-        try {
-            String finalSummary = (aggregated != null && !aggregated.isBlank()) ? aiQuizClient.summarize(aggregated) : null;
-            gen = (finalSummary != null && !finalSummary.isBlank()) ? aiQuizClient.generate(finalSummary) : java.util.List.of();
-        } catch (Exception ex) {
-            gen = java.util.List.of();
-        }
-
-        if ((gen == null || gen.isEmpty())) {
-            String src = (aggregated != null && !aggregated.isBlank()) ? aggregated : null;
-            if (src == null) src = "";
-            String base = src.replaceAll("[^가-힣A-Za-z0-9 ]", " ").trim();
-            String[] toks = base.split("\\s+");
-            java.util.LinkedHashSet<String> uniq = new java.util.LinkedHashSet<>();
-            for (String t : toks) {
-                if (t != null && t.length() >= 2) {
-                    uniq.add(t);
-                    if (uniq.size() >= 4) break;
-                }
-            }
-            java.util.List<String> opts = new java.util.ArrayList<>(uniq);
-            if (opts.size() < 2) {
-                opts = java.util.List.of("예", "아니오");
-            }
-            newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData fd = new newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData();
-            fd.text = "요약의 핵심 키워드로 가장 적합한 것은 무엇인가요?";
-            fd.options = opts;
-            fd.correctIndex = 0;
-            fd.explanation = null;
-            gen = java.util.List.of(fd);
-        }
-
-        java.util.List<Question> questions = new java.util.ArrayList<>();
-        if (gen != null && !gen.isEmpty()) {
-            newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData d = gen.get(0);
-            Question q = new Question();
-            q.setText(d.text);
-            q.setOptions(d.options != null ? d.options : java.util.List.of());
-            q.setCorrectIndex(d.correctIndex);
-            q.setExplanation(d.explanation);
-            questions.add(q);
-        }
-
-        Quiz quiz = new Quiz();
-        quiz.setTitle("오늘의 주요뉴스 퀴즈");
-        quiz.setQuestions(questions);
         java.time.Instant now = java.time.Instant.now();
-        quiz.setStartAt(now);
-        quiz.setEndAt(now.plus(java.time.Duration.ofHours(6)));
+        java.time.Instant from = now.minus(java.time.Duration.ofHours(6));
+        java.util.List<Quiz> quizzes = quizService.listByPeriod(from, now.plus(java.time.Duration.ofHours(6)));
+        for (Quiz q : quizzes) {
+            if ("오늘의 주요뉴스 퀴즈".equals(q.getTitle())) {
+                QuizResponse res = toResponse(q, false);
+                return ResponseEntity.ok(ApiResult.ok(res));
+            }
+        }
 
-        Quiz saved = quizService.create(quiz);
-        QuizResponse res = toResponse(saved, false);
-        return ResponseEntity.ok(ApiResult.ok(res));
+        // 기존 스케줄러에서 생성된 퀴즈가 없다면 빈 응답 처리
+        return ResponseEntity.ok(ApiResult.ok(null));
     }
 
 
@@ -185,7 +122,7 @@ public class QuizController {
 
     @GetMapping("/{id}/result")
     public ResponseEntity<ApiResult<SubmitResult>> result(@PathVariable Long id) {
-        SubmitResult last = quizService.resultOrThrow(id);
+        SubmitResult last = quizService.lastResult(id);
         return ResponseEntity.ok(ApiResult.ok(last));
     }
 

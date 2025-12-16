@@ -1,5 +1,6 @@
 package newsugar.Newsugar_Back.schedular;
 
+import newsugar.Newsugar_Back.domain.ai.GeminiService;
 import newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient;
 import newsugar.Newsugar_Back.domain.news.dto.deepserviceDTO.ArticleDTO;
 import newsugar.Newsugar_Back.domain.news.dto.deepserviceDTO.DeepSearchResponseDTO;
@@ -8,6 +9,9 @@ import newsugar.Newsugar_Back.domain.news.service.RssNewsService;
 import newsugar.Newsugar_Back.domain.quiz.model.Question;
 import newsugar.Newsugar_Back.domain.quiz.model.Quiz;
 import newsugar.Newsugar_Back.domain.quiz.service.QuizService;
+import newsugar.Newsugar_Back.domain.summary.model.Summary;
+import newsugar.Newsugar_Back.domain.summary.repository.CategorySummaryRedis;
+import newsugar.Newsugar_Back.domain.summary.repository.SummaryRepository;
 import newsugar.Newsugar_Back.domain.summary.service.CategorySummaryService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,18 +30,28 @@ public class Schedular {
     private final NewsService newsService;
     private final RssNewsService rssNewsService;
     private final AiQuizClient aiQuizClient;
+    private final CategorySummaryRedis categorySummaryRedis;
+    private final GeminiService geminiService;
+    private final SummaryRepository summaryRepository;
     private final String[] categories = {"politics", "economy","society", "culture", "tech", "entertainment", "opinion"};
+    private static final String TODAY_MAIN_KEY = "today_main_summary";
 
     public Schedular(CategorySummaryService categorySummaryService,
                      QuizService quizService,
                      NewsService newsService,
                      RssNewsService rssNewsService,
-                     AiQuizClient aiQuizClient) {
+                     AiQuizClient aiQuizClient,
+                     CategorySummaryRedis categorySummaryRedis,
+                     GeminiService geminiService,
+                     SummaryRepository summaryRepository) {
         this.categorySummaryService = categorySummaryService;
         this.quizService = quizService;
         this.newsService = newsService;
         this.rssNewsService = rssNewsService;
         this.aiQuizClient = aiQuizClient;
+        this.categorySummaryRedis = categorySummaryRedis;
+        this.geminiService = geminiService;
+        this.summaryRepository = summaryRepository;
     }
 
     @Scheduled(cron = "0 0 0,6,12,18 * * *")
@@ -47,8 +61,8 @@ public class Schedular {
         }
     }
 
-    @Scheduled(cron = "0 0 0,6,12,18 * * *")
-    public void generateTodayMainQuiz() {
+    @Scheduled(cron = "0 0 * * * *")
+    public void generateTodayMainSummary() {
         DeepSearchResponseDTO news;
         try {
             news = newsService.getNewsByCategory(null, 1, 5);
@@ -68,7 +82,29 @@ public class Schedular {
                 if (!s.isBlank()) summaries.add(s);
             }
         }
-        String aggregated = String.join("\n- ", summaries);
+        if (summaries.isEmpty()) {
+            categorySummaryRedis.deleteSummary(TODAY_MAIN_KEY);
+            return;
+        }
+        String todaySummary = geminiService.summarize("오늘 주요", summaries);
+        Summary summary = Summary.builder()
+                .summaryText(todaySummary)
+                .build();
+        summaryRepository.save(summary);
+    }
+
+    @Scheduled(cron = "0 0 0,6,12,18 * * *")
+    public void generateTodayMainQuiz() {
+        Summary baseSummary = summaryRepository.findAll().stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .findFirst()
+                .orElse(null);
+
+        if (baseSummary == null || baseSummary.getSummaryText() == null || baseSummary.getSummaryText().isBlank()) {
+            return;
+        }
+
+        String aggregated = baseSummary.getSummaryText();
 
         List<AiQuizClient.QuestionData> gen;
         try {
