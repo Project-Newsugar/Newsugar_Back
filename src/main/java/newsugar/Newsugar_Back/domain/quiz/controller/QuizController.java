@@ -145,14 +145,13 @@ public class QuizController {
 
         java.util.List<Question> questions = new java.util.ArrayList<>();
         if (gen != null && !gen.isEmpty()) {
-            for (newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData d : gen) {
-                Question q = new Question();
-                q.setText(d.text);
-                q.setOptions(d.options != null ? d.options : java.util.List.of());
-                q.setCorrectIndex(d.correctIndex);
-                q.setExplanation(d.explanation);
-                questions.add(q);
-            }
+            newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData d = gen.get(0);
+            Question q = new Question();
+            q.setText(d.text);
+            q.setOptions(d.options != null ? d.options : java.util.List.of());
+            q.setCorrectIndex(d.correctIndex);
+            q.setExplanation(d.explanation);
+            questions.add(q);
         }
 
         Quiz quiz = new Quiz();
