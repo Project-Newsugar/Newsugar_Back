@@ -42,6 +42,9 @@ public class QuizServiceImpl implements QuizService {
                 throw new CustomException(ErrorCode.BAD_REQUEST, "종료 시간이 시작 시간보다 빠릅니다");
             }
         }
+        if (quiz.getIsRevealed() == null) {
+            quiz.setIsRevealed(Boolean.FALSE);
+        }
         if (quiz.getQuestions() != null) {
             for (Question q : quiz.getQuestions()) {
                 if (q.getText() == null || q.getText().isBlank()) {
