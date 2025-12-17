@@ -54,10 +54,12 @@ public class Schedular {
         this.summaryRepository = summaryRepository;
     }
 
-    @Scheduled(cron = "0 0 0,6,12,18 * * *")
+    @Scheduled(cron = "0 0 * * * *")
     public void generateAllCategorySummaries() {
         for (String category : categories) {
-            categorySummaryService.generateCategorySummary(category);
+            String summary = categorySummaryService.generateCategorySummary(category);
+            categorySummaryService.saveInRedis(category, summary);
+            System.out.println("Category: " + category + ", Summary: " + summary);
         }
     }
 
