@@ -32,12 +32,20 @@ public class AiQuizClient {
     }
 
     public AiQuizClient() {
-        Dotenv env = Dotenv.load();
-        this.baseUrl = env.get("QUIZ_AI_BASE_URL");
-        this.apiKey = env.get("QUIZ_AI_API_KEY");
+        Dotenv env = Dotenv.configure().ignoreIfMissing().load();
+        
+        String u = System.getenv("QUIZ_AI_BASE_URL");
+        if (u == null) u = env.get("QUIZ_AI_BASE_URL");
+        this.baseUrl = u;
+
+        String k = System.getenv("QUIZ_AI_API_KEY");
+        if (k == null) k = env.get("QUIZ_AI_API_KEY");
+        this.apiKey = k;
+
         long tm = 0L;
         try {
-            String v = env.get("QUIZ_AI_TIMEOUT_MS");
+            String v = System.getenv("QUIZ_AI_TIMEOUT_MS");
+            if (v == null) v = env.get("QUIZ_AI_TIMEOUT_MS");
             if (v != null && !v.isBlank()) tm = Long.parseLong(v.trim());
         } catch (Exception ignored) {}
         this.timeoutMs = tm > 0 ? tm : 0L;

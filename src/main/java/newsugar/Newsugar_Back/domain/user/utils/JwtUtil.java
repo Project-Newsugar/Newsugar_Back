@@ -25,11 +25,24 @@ public class JwtUtil {
     private final Key refreshKey;
 
     public JwtUtil() {
-        Dotenv dotenv = Dotenv.load();
-        this.JWT_SECRET = dotenv.get("JWT_SECRET");
-        this.JWT_EXPIRATION = Long.parseLong(Objects.requireNonNull(dotenv.get("JWT_EXPIRATION")));
-        this.JWT_REFRESH_SECRET = dotenv.get("JWT_REFRESH_SECRET");
-        this.JWT_REFRESH_EXPIRATION = Long.parseLong(Objects.requireNonNull(dotenv.get("JWT_REFRESH_EXPIRATION")));
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        
+        String secret = System.getenv("JWT_SECRET");
+        if (secret == null) secret = dotenv.get("JWT_SECRET");
+        this.JWT_SECRET = secret;
+
+        String exp = System.getenv("JWT_EXPIRATION");
+        if (exp == null) exp = dotenv.get("JWT_EXPIRATION");
+        this.JWT_EXPIRATION = Long.parseLong(Objects.requireNonNull(exp));
+
+        String refSecret = System.getenv("JWT_REFRESH_SECRET");
+        if (refSecret == null) refSecret = dotenv.get("JWT_REFRESH_SECRET");
+        this.JWT_REFRESH_SECRET = refSecret;
+
+        String refExp = System.getenv("JWT_REFRESH_EXPIRATION");
+        if (refExp == null) refExp = dotenv.get("JWT_REFRESH_EXPIRATION");
+        this.JWT_REFRESH_EXPIRATION = Long.parseLong(Objects.requireNonNull(refExp));
+
         this.key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
         this.refreshKey = Keys.hmacShaKeyFor(JWT_REFRESH_SECRET.getBytes());
     }
