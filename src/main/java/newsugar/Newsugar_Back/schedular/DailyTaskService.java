@@ -50,7 +50,7 @@ public class DailyTaskService {
         this.quizService = quizService;
     }
 
-    @Transactional
+    // @Transactional // 트랜잭션 롤백 문제 방지를 위해 주석 처리 (개별 저장 로직에서 처리됨)
     public void executeDailyRoutine() {
         // 뉴스 가져오기 및 요약 생성
         Summary summary = generateSummary();
@@ -89,12 +89,37 @@ public class DailyTaskService {
             return null;
         }
 
-        String todaySummary = geminiService.summarize("오늘 주요", summaries);
+        // Gemini API 호출 (최대 3회 재시도 및 실패 시 단순 연결로 대체)
+        String todaySummary;
+        try {
+            todaySummary = geminiService.summarize("오늘 주요", summaries);
+        } catch (Exception e) {
+            System.err.println("AI 요약 실패 (API Quota 등): " + e.getMessage());
+            // Fallback: AI 실패 시 수집된 뉴스 요약들을 단순 연결하여 사용
+            todaySummary = String.join("\n", summaries);
+            // Fallback 데이터도 너무 길면 자름
+            if (todaySummary.length() > 2000) {
+                todaySummary = todaySummary.substring(0, 2000) + "...";
+            }
+        }
+
+        // DB 컬럼 용량(TEXT) 초과 방지를 위한 안전장치 (최대 3000자)
+        if (todaySummary != null && todaySummary.length() > 3000) {
+            System.out.println("요약문 길이가 너무 길어서 자릅니다. 원래 길이: " + todaySummary.length());
+            todaySummary = todaySummary.substring(0, 3000) + "...[내용 중략]";
+        }
+
         Summary summary = Summary.builder()
                 .summaryText(todaySummary)
                 .build();
         
-        return summaryRepository.save(summary);
+        try {
+            return summaryRepository.save(summary);
+        } catch (Exception e) {
+            System.err.println("요약문 저장 실패 (DB 컬럼 용량 초과 등): " + e.getMessage());
+            // 저장은 실패했지만 퀴즈 생성은 계속 진행하기 위해 객체 반환
+            return summary;
+        }
     }
 
     private void generateQuiz(Summary baseSummary) {
@@ -154,6 +179,10 @@ public class DailyTaskService {
         quiz.setStartAt(now);
         quiz.setEndAt(now.plus(Duration.ofHours(6)));
 
-        quizService.create(quiz);
+        try {
+            quizService.create(quiz);
+        } catch (Exception e) {
+            System.err.println("퀴즈 저장 실패: " + e.getMessage());
+        }
     }
 }

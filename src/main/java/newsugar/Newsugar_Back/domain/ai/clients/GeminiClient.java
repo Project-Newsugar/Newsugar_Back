@@ -23,12 +23,12 @@ public class GeminiClient {
     }
 
     public String summarizeCategory(String prompt) {
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + apiKey;
         GeminiRequestDTO request = GeminiRequestDTO.of(prompt);
 
-        int maxRetries = 5;
+        int maxRetries = 3; // 개발 테스트를 위해 재시도 횟수 감소
         int retryCount = 0;
-        long waitTime = 10000; // 10초로 시작
+        long waitTime = 5000; // 5초로 시작
 
         while (retryCount < maxRetries) {
             try {
@@ -49,9 +49,10 @@ public class GeminiClient {
                     waitTime *= 2; // 지수 백오프
                     continue;
                 }
-                throw e; // 다른 에러는 바로 던짐
+                // 429 에러가 아니면 재시도하지 않고 바로 예외를 던져서 Fallback 로직이 동작하게 함
+                throw e; 
             }
         }
-        throw new RuntimeException("Gemini API 호출 실패: 재시도 횟수 초과");
+        throw new RuntimeException("Gemini API 호출 실패: 재시도 횟수 초과 (429 Too Many Requests)");
     }
 }

@@ -34,18 +34,24 @@ public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(columnDefinition = "TEXT")
     private String text;
 
     @ElementCollection
     @CollectionTable(name = "question_option", joinColumns = @JoinColumn(name = "question_id"))
-    @Column(name = "option_text")
+    @Column(name = "option_text", columnDefinition = "TEXT")
     @Default
     private List<String> options = new ArrayList<>();
 
     private Integer correctIndex;
 
-    @Column(name = "explanation")
+    @Column(name = "explanation", columnDefinition = "TEXT")
     private String explanation;
+
+    //이렇게 하면 question이 속한 퀴즈의 id를 알 수 있게 되는 거에요. 그냥 명찰 달아준거라 보시면 됩니다.
+    @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "quiz_id")
+    private Quiz quiz;
 
     @CreatedDate
     private Instant createdAt;

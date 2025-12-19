@@ -28,7 +28,9 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(host, port);
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(host, port);
+        factory.setValidateConnection(false); // 연결 실패해도 빈 생성 자체는 되도록 설정
+        return factory;
     }
 
     @Bean
