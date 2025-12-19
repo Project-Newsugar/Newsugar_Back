@@ -49,7 +49,7 @@ public class AiProxyController {
             String prompt = "다음 요약문을 기반으로 한국 뉴스 관련 4지선다 객관식 문제를 1개 생성하세요. " +
                     "반드시 순수 JSON만 반환하고, 코드블록이나 추가 텍스트는 금지합니다. " +
                     "출력 형식은 정확히 {\"questions\":[{\"text\":\"문제 문장\",\"options\":[\"선지1\",\"선지2\",\"선지3\",\"선지4\"],\"correctIndex\":정수,\"explanation\":\"해설\"}]} 입니다. " +
-                    "모든 options 값은 서로 달라야 하며, correctIndex는 0~3 범위여야 합니다. 요약문: " +
+                    "모든 options 값은 명사형 또는 문장이여야 하며 서로 달라야 합니다. correctIndex는 0~3 범위여야 합니다. 요약문: " +
                     (req != null ? req.summary : "");
 
             Map<String, Object> content = new HashMap<>();
@@ -61,7 +61,7 @@ public class AiProxyController {
             contents.put("contents", new Object[]{parts});
             String body = mapper.writeValueAsString(contents);
 
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + apiKey;
             HttpRequest httpReq = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")
@@ -135,7 +135,7 @@ public class AiProxyController {
             contents.put("contents", new Object[]{parts});
             String body = mapper.writeValueAsString(contents);
 
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + apiKey;
             HttpRequest httpReq = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")

@@ -29,7 +29,7 @@ public class Summary {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "summary_text", columnDefinition = "TEXT")
+    @Column(name = "summary_text", columnDefinition = "LONGTEXT")
     private String summaryText;
 
     @CreatedDate

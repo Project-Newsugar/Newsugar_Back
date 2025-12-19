@@ -50,6 +50,7 @@ public class QuizServiceImpl implements QuizService {
         }
         if (quiz.getQuestions() != null) {
             for (Question q : quiz.getQuestions()) {
+                q.setQuiz(quiz); // 이부분이 양방향 설정해주는거에요 명찰 달아주고 주인 설정해줬으니 연결해주는 거죠 (이게 없으면 quiz_id가 null로 들어가요)
                 if (q.getText() == null || q.getText().isBlank()) {
                     throw new CustomException(ErrorCode.BAD_REQUEST, "문제 내용이 비어 있습니다");
                 }

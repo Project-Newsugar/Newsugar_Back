@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/dev/quizzes")
-@Profile("dev")
+// @Profile("dev")
 public class DevQuizController {
 
     private final Schedular schedular;
