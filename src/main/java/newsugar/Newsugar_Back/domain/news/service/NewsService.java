@@ -21,8 +21,10 @@ public class NewsService {
     public NewsService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
 
-        Dotenv dotenv = Dotenv.load();
-        this.apiKey = dotenv.get("NEWS_API_KEY");
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        String key = System.getenv("NEWS_API_KEY");
+        if (key == null) key = dotenv.get("NEWS_API_KEY");
+        this.apiKey = key;
     }
 
     public DeepSearchResponseDTO getNewsByCategory(

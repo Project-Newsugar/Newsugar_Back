@@ -22,8 +22,10 @@ public class AiProxyController {
     private final String apiKey;
 
     public AiProxyController() {
-        Dotenv env = Dotenv.load();
-        this.apiKey = env.get("QUIZ_AI_API_KEY");
+        Dotenv env = Dotenv.configure().ignoreIfMissing().load();
+        String k = System.getenv("QUIZ_AI_API_KEY");
+        if (k == null) k = env.get("QUIZ_AI_API_KEY");
+        this.apiKey = k;
     }
 
     public static class SummaryReq {

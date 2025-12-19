@@ -32,7 +32,7 @@ public class DevQuizController {
 
     @PostMapping("/today-main/generate")
     public ResponseEntity<ApiResult<Void>> generateTodayMainQuizDev() {
-        schedular.generateTodayMainQuiz();
+        schedular.generateTodayMainContent();
         return ResponseEntity.ok(ApiResult.ok(null));
     }
 
