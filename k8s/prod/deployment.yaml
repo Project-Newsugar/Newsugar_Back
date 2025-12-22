@@ -61,8 +61,6 @@ spec:
                   name: newsugar-secrets-prod
                   key: quiz-ai-api-key
             - name: REDIS_HOST
-              # TODO: Prod 환경에서 ElastiCache 사용 확정 시 아래 값을 실제 엔드포인트로 변경해야함
-              # 현재는 임시로 내부 Redis 서비스(redis-service-prod)를 바라보게 설정함
-              value: "redis-service-prod" 
+              value: "newsugar-prod-redis.2iapp0.ng.0001.apn2.cache.amazonaws.com"
             - name: REDIS_PORT
               value: "6379"
