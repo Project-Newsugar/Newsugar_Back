@@ -40,6 +40,7 @@ public class Question {
     @ElementCollection
     @CollectionTable(name = "question_option", joinColumns = @JoinColumn(name = "question_id"))
     @Column(name = "option_text", columnDefinition = "TEXT")
+    @jakarta.persistence.OrderColumn(name = "option_order")
     @Default
     private List<String> options = new ArrayList<>();
 

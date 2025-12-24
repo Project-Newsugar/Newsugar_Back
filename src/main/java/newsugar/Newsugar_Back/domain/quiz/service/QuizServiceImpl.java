@@ -92,17 +92,28 @@ public class QuizServiceImpl implements QuizService {
         List<Boolean> results = new ArrayList<>();
         List<SubmissionAnswer> storedAnswers = new ArrayList<>();
         for (int i = 0; i < total; i++) {
-            Integer answer = (answers != null && i < answers.size()) ? answers.get(i) : null;
+            Integer rawAnswer = (answers != null && i < answers.size()) ? answers.get(i) : null;
+            Integer answer = rawAnswer;
+            
+            // 프론트엔드에서 1-based index(1, 2, 3, 4)로 보내므로 0-based(0, 1, 2, 3)로 변환
+            if (answer != null && answer > 0) {
+                answer = answer - 1;
+            }
+
             Integer expected = qs.get(i).getCorrectIndex();
             int optionSize = qs.get(i).getOptions() != null ? qs.get(i).getOptions().size() : 0;
+            
             boolean inRange = (answer != null && answer >= 0 && answer < optionSize);
             boolean ok = (inRange && expected != null && answer.equals(expected));
+            
+            System.out.println("Quiz Scoring - Q[" + i + "] UserRaw: " + rawAnswer + ", UserAdj: " + answer + ", Expected: " + expected + ", Correct: " + ok);
+            
             if (ok) correct++;
             results.add(ok);
 
             SubmissionAnswer sa = new SubmissionAnswer();
             sa.setQuestionIndex(i);
-            sa.setChosenIndex(answer);
+            sa.setChosenIndex(answer); // DB에는 0-based로 저장
             sa.setCorrect(ok);
             sa.setAnsweredAt(Instant.now());
             sa.setUserId(userId);

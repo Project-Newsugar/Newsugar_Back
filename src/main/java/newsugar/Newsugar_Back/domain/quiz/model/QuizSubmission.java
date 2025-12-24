@@ -37,6 +37,7 @@ public class QuizSubmission {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "submission_id")
+    @jakarta.persistence.OrderColumn(name = "answer_order")
     @Default
     private List<SubmissionAnswer> answers = new ArrayList<>();
 
