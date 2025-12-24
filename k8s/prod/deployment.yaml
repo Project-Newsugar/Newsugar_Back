@@ -20,7 +20,6 @@ spec:
     spec:
       containers:
         - name: newsugar-backend
-          #AWS Account ID: 0610-3980-4626
           image: 061039804626.dkr.ecr.ap-northeast-2.amazonaws.com/newsugar-backend:prod
           imagePullPolicy: Always
           ports:
@@ -36,10 +35,9 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
             - name: SPRING_DATASOURCE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: newsugar-secrets-prod
-                  key: db-url
+              value: "jdbc:mysql://newsugar-prod-aurora-cluster.cluster-c3qme6c6e7fj.ap-northeast-2.rds.amazonaws.com:3306/newsugar?serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "update"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -64,3 +62,13 @@ spec:
               value: "newsugar-prod-redis.2iapp0.ng.0001.apn2.cache.amazonaws.com"
             - name: REDIS_PORT
               value: "6379"
+            - name: JWT_SECRET
+              value: "newsugar-prod-secret-key-very-long-and-secure-value-1234567890"
+            - name: JWT_EXPIRATION
+              value: "86400000"
+            - name: JWT_REFRESH_SECRET
+              value: "newsugar-prod-refresh-secret-key-very-long-and-secure-value-0987654321"
+            - name: JWT_REFRESH_EXPIRATION
+              value: "604800000"
+            - name: QUIZ_AI_TIMEOUT_MS
+              value: "60000"
