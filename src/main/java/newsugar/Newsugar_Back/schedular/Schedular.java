@@ -25,28 +25,18 @@ public class Schedular {
     }
 
 
-// 로컬에서만 실행
-//    @Scheduled(cron = "0 0 * * * *")
-//@EventListener(ApplicationReadyEvent.class)
-//    public void runDailyTask() {
-//        dailyTaskService.executeDailyRoutine();
-//
-//        for (String category : categories) {
-//            String summary = categorySummaryService.generateCategorySummary(category);
-//            categorySummaryService.saveInRedis(category, summary);
-//            System.out.println("Category: " + category + ", Summary: " + summary);
-//        }
-//    }
-
-//    @Scheduled(cron = "0 0 0,6,12,18 * * *")
+    // 로컬에서만 실행
     @Scheduled(cron = "0 0 * * * *")
-    public void generateTodayMainContent() {
-        dailyTaskService.executeDailyRoutine();
-
+    public void runDailyTask() {
         for (String category : categories) {
             String summary = categorySummaryService.generateCategorySummary(category);
             categorySummaryService.saveInRedis(category, summary);
             System.out.println("Category: " + category + ", Summary: " + summary);
         }
+    }
+
+    @Scheduled(cron = "0 0 0,6,12,18 * * *")
+    public void generateTodayMainContent() {
+        dailyTaskService.executeDailyRoutine();
     }
 }
