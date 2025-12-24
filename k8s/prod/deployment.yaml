@@ -58,10 +58,7 @@ spec:
                   name: newsugar-secrets-prod
                   key: news-api-key
             - name: QUIZ_AI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: newsugar-secrets-prod
-                  key: quiz-ai-api-key
+              value: "AIzaSyBs82S0035DIYzVOWvU_3-Z99u2sOEjrj0"
             - name: REDIS_HOST
               value: "newsugar-prod-redis.2iapp0.ng.0001.apn2.cache.amazonaws.com"
             - name: REDIS_PORT
