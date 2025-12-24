@@ -38,7 +38,71 @@ public class GeminiService {
           - 요약 내용만 출력하고 그 외 설명은 포함하지 말 것
         """.formatted(category, joinedSummaries);
 
-        return geminiClient.summarizeCategory(prompt);
+        return geminiClient.generateContent(prompt);
     }
 
+    public List<newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData> generateQuiz(String summaryText) {
+        String prompt = """
+        다음 요약문을 바탕으로 1개의 객관식 퀴즈를 생성하라.
+        반드시 아래 JSON 형식으로만 출력하라. 마크다운 코드 블록(```json)이나 다른 설명은 절대 포함하지 말고 순수 JSON 문자열만 출력하라.
+        
+        {
+          "questions": [
+            {
+              "text": "질문 내용",
+              "options": ["보기1", "보기2", "보기3", "보기4"],
+              "correctIndex": 0,
+              "explanation": "해설"
+            }
+          ]
+        }
+        
+        [요약문]
+        %s
+        """.formatted(summaryText);
+
+        try {
+            String response = geminiClient.generateContent(prompt);
+            if (response == null) return java.util.Collections.emptyList();
+
+            // Clean up response
+            response = response.trim();
+            if (response.startsWith("```json")) {
+                response = response.substring(7);
+            } else if (response.startsWith("```")) {
+                response = response.substring(3);
+            }
+            if (response.endsWith("```")) {
+                response = response.substring(0, response.length() - 3);
+            }
+            response = response.trim();
+
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(response);
+            com.fasterxml.jackson.databind.JsonNode qs = root.get("questions");
+
+            List<newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData> out = new java.util.ArrayList<>();
+            if (qs != null && qs.isArray()) {
+                for (com.fasterxml.jackson.databind.JsonNode q : qs) {
+                    newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData d = new newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient.QuestionData();
+                    d.text = q.has("text") ? q.get("text").asText() : "";
+                    d.correctIndex = q.has("correctIndex") ? q.get("correctIndex").asInt() : 0;
+                    d.explanation = q.has("explanation") ? q.get("explanation").asText() : "";
+
+                    List<String> opts = new java.util.ArrayList<>();
+                    if (q.has("options") && q.get("options").isArray()) {
+                        for (com.fasterxml.jackson.databind.JsonNode o : q.get("options")) {
+                            opts.add(o.asText());
+                        }
+                    }
+                    d.options = opts;
+                    out.add(d);
+                }
+            }
+            return out;
+        } catch (Exception e) {
+            System.err.println("Quiz generation/parsing failed: " + e.getMessage());
+            return java.util.Collections.emptyList();
+        }
+    }
 }

@@ -9,6 +9,7 @@ import newsugar.Newsugar_Back.domain.quiz.model.SubmissionAnswer;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizRepository;
 import newsugar.Newsugar_Back.domain.quiz.repository.QuizSubmissionRepository;
 import newsugar.Newsugar_Back.domain.ai.clients.AiQuizClient;
+import newsugar.Newsugar_Back.domain.ai.GeminiService;
 import newsugar.Newsugar_Back.domain.score.Service.ScoreService;
 import newsugar.Newsugar_Back.domain.summary.repository.SummaryRepository;
 import newsugar.Newsugar_Back.domain.summary.model.Summary;
@@ -29,13 +30,15 @@ public class QuizServiceImpl implements QuizService {
     private final SummaryRepository summaryRepository;
     private final AiQuizClient aiQuizClient;
     private final ScoreService scoreService;
+    private final GeminiService geminiService;
 
-    public QuizServiceImpl(QuizRepository quizRepository, QuizSubmissionRepository quizSubmissionRepository, SummaryRepository summaryRepository, AiQuizClient aiQuizClient, ScoreService scoreService) {
+    public QuizServiceImpl(QuizRepository quizRepository, QuizSubmissionRepository quizSubmissionRepository, SummaryRepository summaryRepository, AiQuizClient aiQuizClient, ScoreService scoreService, GeminiService geminiService) {
         this.quizRepository = quizRepository;
         this.quizSubmissionRepository = quizSubmissionRepository;
         this.summaryRepository = summaryRepository;
         this.aiQuizClient = aiQuizClient;
         this.scoreService = scoreService;
+        this.geminiService = geminiService;
     }
 
     @Override
@@ -194,7 +197,7 @@ public class QuizServiceImpl implements QuizService {
         Summary summary = summaryRepository.findById(summaryId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "요약을 찾을 수 없습니다"));
 
-        List<AiQuizClient.QuestionData> gen = aiQuizClient.generate(summary.getSummaryText());
+        List<AiQuizClient.QuestionData> gen = geminiService.generateQuiz(summary.getSummaryText());
         List<Question> questions = new ArrayList<>();
         if (gen != null && !gen.isEmpty()) {
             AiQuizClient.QuestionData d = gen.get(0);
@@ -202,6 +205,7 @@ public class QuizServiceImpl implements QuizService {
             q.setText(d.text);
             q.setOptions(d.options != null ? d.options : List.of());
             q.setCorrectIndex(d.correctIndex);
+            q.setExplanation(d.explanation);
             questions.add(q);
         }
         Quiz quiz = new Quiz();

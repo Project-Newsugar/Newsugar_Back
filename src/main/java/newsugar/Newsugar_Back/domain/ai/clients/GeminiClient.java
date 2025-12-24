@@ -22,7 +22,7 @@ public class GeminiClient {
         }
     }
 
-    public String summarizeCategory(String prompt) {
+    public String generateContent(String prompt) {
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + apiKey;
         GeminiRequestDTO request = GeminiRequestDTO.of(prompt);
 

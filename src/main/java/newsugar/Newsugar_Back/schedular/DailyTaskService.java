@@ -124,13 +124,21 @@ public class DailyTaskService {
             return;
         }
 
+        // API 쿼터 제한을 피하기 위해 요약 생성 후 잠시 대기
+        try {
+            Thread.sleep(10000); // 10초 대기
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         String aggregated = baseSummary.getSummaryText();
 
         List<AiQuizClient.QuestionData> gen;
         try {
-            String finalSummary = (aggregated != null && !aggregated.isBlank()) ? aiQuizClient.summarize(aggregated) : null;
-            gen = (finalSummary != null && !finalSummary.isBlank()) ? aiQuizClient.generate(finalSummary) : List.of();
+            // 외부 AI 서비스 대신 GeminiService 직접 사용
+            gen = geminiService.generateQuiz(aggregated);
         } catch (Exception ex) {
+            System.err.println("Quiz generation failed: " + ex.getMessage());
             gen = List.of();
         }
 
