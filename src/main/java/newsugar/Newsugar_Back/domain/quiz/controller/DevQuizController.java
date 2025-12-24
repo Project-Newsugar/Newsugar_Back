@@ -36,6 +36,12 @@ public class DevQuizController {
         return ResponseEntity.ok(ApiResult.ok(null));
     }
 
+    @PostMapping("/category-summary/generate")
+    public ResponseEntity<ApiResult<Void>> generateCategorySummaryDev() {
+        schedular.runDailyTask();
+        return ResponseEntity.ok(ApiResult.ok(null));
+    }
+
     @DeleteMapping("/{quizId}")
     public ResponseEntity<ApiResult<Void>> deleteQuizWithSubmissions(@PathVariable Long quizId) {
         List<QuizSubmission> submissions = quizSubmissionRepository.findByQuiz_Id(quizId);
