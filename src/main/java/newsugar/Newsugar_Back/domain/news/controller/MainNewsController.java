@@ -66,18 +66,13 @@ public class MainNewsController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "5") Integer page_size
     ) {
-        String redisKey = "today_main_summary";
-        String cached = categorySummaryRedis.getSummary(redisKey);
-        if (cached != null && !cached.isBlank()) {
-            return ResponseEntity.ok(ApiResult.ok(cached));
-        }
+
         java.util.Optional<Summary> latest = summaryRepository.findAll().stream()
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .findFirst();
         if (latest.isPresent()) {
             String txt = latest.get().getSummaryText();
             if (txt != null && !txt.isBlank()) {
-                categorySummaryRedis.saveSummary(redisKey, txt);
                 return ResponseEntity.ok(ApiResult.ok(txt));
             }
         }
@@ -102,7 +97,7 @@ public class MainNewsController {
             return ResponseEntity.ok(ApiResult.ok(""));
         }
         String todaySummary = geminiService.summarize("오늘 주요", summaries);
-        categorySummaryRedis.saveSummary(redisKey, todaySummary);
+        // Redis 저장 로직 제거
         return ResponseEntity.ok(ApiResult.ok(todaySummary));
     }
 

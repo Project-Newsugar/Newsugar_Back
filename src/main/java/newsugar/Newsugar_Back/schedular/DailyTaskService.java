@@ -32,8 +32,6 @@ public class DailyTaskService {
     private final AiQuizClient aiQuizClient;
     private final QuizService quizService;
 
-    private static final String TODAY_MAIN_KEY = "today_main_summary";
-
     public DailyTaskService(NewsService newsService,
                             RssNewsService rssNewsService,
                             CategorySummaryRedis categorySummaryRedis,
@@ -85,7 +83,7 @@ public class DailyTaskService {
         }
 
         if (summaries.isEmpty()) {
-            categorySummaryRedis.deleteSummary(TODAY_MAIN_KEY);
+            // Redis 삭제 로직 제거 (DB 기반이므로 불필요)
             return null;
         }
 
