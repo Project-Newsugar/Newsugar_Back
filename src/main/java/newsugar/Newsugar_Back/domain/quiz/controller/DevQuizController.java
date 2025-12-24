@@ -9,6 +9,7 @@ import newsugar.Newsugar_Back.domain.quiz.repository.QuizSubmissionRepository;
 import newsugar.Newsugar_Back.schedular.Schedular;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -153,10 +154,11 @@ public class DevQuizController {
     }
 
     @DeleteMapping("/{quizId}")
+    @Transactional
     public ResponseEntity<ApiResult<Void>> deleteQuizWithSubmissions(@PathVariable Long quizId) {
         List<QuizSubmission> submissions = quizSubmissionRepository.findByQuiz_Id(quizId);
         if (submissions != null && !submissions.isEmpty()) {
-            quizSubmissionRepository.deleteAll(submissions);
+            quizSubmissionRepository.deleteAllInBatch(submissions);
         }
         if (quizRepository.existsById(quizId)) {
             quizRepository.deleteById(quizId);
@@ -165,8 +167,9 @@ public class DevQuizController {
     }
 
     @DeleteMapping("/submissions/all")
+    @Transactional
     public ResponseEntity<ApiResult<Void>> deleteAllSubmissions() {
-        quizSubmissionRepository.deleteAll();
+        quizSubmissionRepository.deleteAllInBatch();
         return ResponseEntity.ok(ApiResult.ok(null));
     }
 }
