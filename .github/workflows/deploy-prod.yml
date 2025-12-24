@@ -79,5 +79,5 @@ jobs:
         git add k8s/prod/deployment.yaml
         git commit -m "Update deployment image to ${{ github.sha }}"
         
-        # main 브랜치에 푸시
-        git push origin main
+        # develop 브랜치에 푸시
+        git push origin develop
