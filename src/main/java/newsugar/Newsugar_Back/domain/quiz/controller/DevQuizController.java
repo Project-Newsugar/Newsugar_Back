@@ -38,7 +38,14 @@ public class DevQuizController {
 
     @PostMapping("/category-summary/generate")
     public ResponseEntity<ApiResult<Void>> generateCategorySummaryDev() {
-        schedular.runDailyTask();
+        // 비동기로 실행하여 API 타임아웃 방지
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                schedular.runDailyTask();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         return ResponseEntity.ok(ApiResult.ok(null));
     }
 
