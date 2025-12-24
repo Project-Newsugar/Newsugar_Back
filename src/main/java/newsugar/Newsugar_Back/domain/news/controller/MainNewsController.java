@@ -97,7 +97,6 @@ public class MainNewsController {
             return ResponseEntity.ok(ApiResult.ok(""));
         }
         String todaySummary = geminiService.summarize("오늘 주요", summaries);
-        // Redis 저장 로직 제거
         return ResponseEntity.ok(ApiResult.ok(todaySummary));
     }
 

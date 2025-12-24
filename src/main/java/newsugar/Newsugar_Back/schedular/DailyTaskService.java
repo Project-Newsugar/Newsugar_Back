@@ -83,7 +83,6 @@ public class DailyTaskService {
         }
 
         if (summaries.isEmpty()) {
-            // Redis 삭제 로직 제거 (DB 기반이므로 불필요)
             return null;
         }
 
